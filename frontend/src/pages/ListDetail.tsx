@@ -142,8 +142,9 @@ export default function ListDetail() {
         row.tags = [];
       }
 
-      // Parse opt_in
-      row.opt_in = row.opt_in === 'true' || row.opt_in === '1' || row.opt_in === 'yes';
+      // Для списков opt_in ВСЕГДА true (требование Meta)
+      // Игнорируем значение из CSV, всегда ставим true
+      row.opt_in = true;
       
       // Name defaults to null if empty
       if (!row.name || row.name.trim() === '') {
@@ -188,11 +189,12 @@ export default function ListDetail() {
     }
 
     try {
+      // ВАЖНО: Для списков opt_in ВСЕГДА true (требование Meta)
       const contactsToImport = importPreview.map((c: any) => ({
         phone: c.phone,
         name: c.name || null,
         tags: c.tags || [],
-        opt_in: c.opt_in !== undefined ? c.opt_in : true,
+        opt_in: true, // Всегда true для контактов в списках
       }));
       
       await importContacts.mutateAsync(contactsToImport);
@@ -357,7 +359,7 @@ export default function ListDetail() {
                           <TableHead>Phone</TableHead>
                           <TableHead>Name</TableHead>
                           <TableHead>Tags</TableHead>
-                          <TableHead>Opt-in</TableHead>
+                          <TableHead>Status</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -375,8 +377,8 @@ export default function ListDetail() {
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant={row.opt_in ? "default" : "secondary"}>
-                                {row.opt_in ? "Yes" : "No"}
+                              <Badge variant="default">
+                                Opt-in ✓
                               </Badge>
                             </TableCell>
                           </TableRow>
@@ -485,8 +487,8 @@ export default function ListDetail() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={contact.opt_in ? "default" : "secondary"}>
-                        {contact.opt_in ? "Yes" : "No"}
+                      <Badge variant="default">
+                        Opt-in ✓
                       </Badge>
                     </TableCell>
                   </TableRow>

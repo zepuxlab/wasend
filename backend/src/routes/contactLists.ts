@@ -145,11 +145,12 @@ router.post(
       }
 
       // Создать или найти контакты и добавить их в список
+      // ВАЖНО: Для контактов в списках ВСЕГДА ставим opt_in: true, чтобы Meta не дала проблем
       const contactsToUpsert = body.contacts.map((contactData) => ({
         phone: contactData.phone,
         name: contactData.name || null,
         tags: contactData.tags || [],
-        opt_in: contactData.opt_in !== undefined ? contactData.opt_in : true,
+        opt_in: true, // Всегда true для контактов в списках (требование Meta)
         source: 'manual', // Импортированные контакты помечаем как 'manual'
       }));
 
