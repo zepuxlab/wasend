@@ -175,13 +175,16 @@ export const db = {
     },
   },
   contacts: {
-    findAll: async (filters?: { tags?: string[]; opt_in?: boolean }) => {
+    findAll: async (filters?: { tags?: string[]; opt_in?: boolean; source?: string }) => {
       let query = supabase.from('contacts').select('*');
       if (filters?.tags && filters.tags.length > 0) {
         query = query.contains('tags', filters.tags);
       }
       if (filters?.opt_in !== undefined) {
         query = query.eq('opt_in', filters.opt_in);
+      }
+      if (filters?.source) {
+        query = query.eq('source', filters.source);
       }
       const { data, error } = await query.order('created_at', {
         ascending: false,

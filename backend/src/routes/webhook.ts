@@ -110,14 +110,20 @@ async function handleIncomingMessage(message: MetaWebhookMessage) {
     const timestamp = new Date(parseInt(message.timestamp) * 1000);
 
     // Найти или создать контакт
-    // Автоматически созданные контакты имеют opt_in: false, чтобы не попадать в рассылки
-    // Для рассылок контакты должны быть добавлены вручную через админку
+    // Автоматически созданные контакты имеют opt_in: false и source: 'auto'
+    // Для рассылок контакты должны быть добавлены вручную через админку (source: 'manual')
     let contact = await db.contacts.findByPhone(phone);
     if (!contact) {
       contact = await db.contacts.create({
         phone,
         opt_in: false, // Автоматически созданные контакты не для рассылок
+        source: 'auto', // Помечаем как автоматически созданный
       });
+    } else if (contact.source !== 'auto') {
+      // Если контакт уже существует как manual, но получил сообщение, обновляем source на auto
+      // Это означает, что пользователь начал диалог
+      await db.contacts.update(contact.id, { source: 'auto' });
+      contact = { ...contact, source: 'auto' };
     }
 
     // Найти или создать чат

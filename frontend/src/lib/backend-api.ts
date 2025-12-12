@@ -202,10 +202,11 @@ export const contactsBackendApi = {
   /**
    * GET /api/contacts
    */
-  getAll: (params?: { tags?: string[]; opt_in?: boolean }) => {
+  getAll: (params?: { tags?: string[]; opt_in?: boolean; source?: 'auto' | 'manual' }) => {
     const query = new URLSearchParams();
     if (params?.tags) query.set('tags', params.tags.join(','));
     if (params?.opt_in !== undefined) query.set('opt_in', String(params.opt_in));
+    if (params?.source) query.set('source', params.source);
     return apiRequest<Contact[]>(`/contacts?${query}`);
   },
 

@@ -8,7 +8,7 @@ import {
 } from '@/lib/backend-api';
 import { toast } from '@/hooks/use-toast';
 
-export function useContactsFromBackend(params?: { tags?: string[]; opt_in?: boolean }) {
+export function useContactsFromBackend(params?: { tags?: string[]; opt_in?: boolean; source?: 'auto' | 'manual' }) {
   return useQuery({
     queryKey: ['contacts', params],
     queryFn: () => contactsBackendApi.getAll(params),

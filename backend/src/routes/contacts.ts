@@ -35,10 +35,12 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
       req.query.opt_in !== undefined
         ? req.query.opt_in === 'true'
         : undefined;
+    const source = req.query.source as string | undefined; // Фильтр по источнику
 
     const contacts = await db.contacts.findAll({
       tags,
       opt_in: optIn,
+      source,
     });
     res.json(contacts);
   } catch (error: any) {
@@ -68,7 +70,11 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const body = createContactSchema.parse(req.body);
-    const contact = await db.contacts.create(body);
+    // Вручную созданные контакты помечаем как 'manual'
+    const contact = await db.contacts.create({
+      ...body,
+      source: 'manual',
+    });
     res.status(201).json(contact);
   } catch (error: any) {
     if (error instanceof z.ZodError) {
@@ -97,6 +103,7 @@ router.post(
           await db.contacts.upsert({
             ...contactData,
             opt_in: true,
+            source: 'manual', // Импортированные контакты помечаем как 'manual'
           });
           imported++;
         } catch (error: any) {

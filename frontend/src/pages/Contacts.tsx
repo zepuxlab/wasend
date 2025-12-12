@@ -33,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useContacts, useCreateContact, useDeleteContact, useBulkCreateContacts } from "@/hooks/useContacts";
+import { useContactsFromBackend, useCreateContactBackend, useDeleteContactBackend, useImportContactsBackend } from "@/hooks/useBackendContacts";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
@@ -51,10 +52,16 @@ export default function Contacts() {
   const navigate = useNavigate();
   const { isConfigured } = useSupabase();
   const { isUser } = useAuth();
-  const { data: contacts, isLoading, error } = useContacts();
-  const createContact = useCreateContact();
-  const deleteContact = useDeleteContact();
-  const bulkCreate = useBulkCreateContacts();
+  // Фильтр по источнику контактов
+  const [contactSource, setContactSource] = useState<'all' | 'auto' | 'manual'>('all');
+  
+  // Используем backend API с фильтром по source
+  const { data: contacts, isLoading, error } = useContactsFromBackend(
+    contactSource !== 'all' ? { source: contactSource } : undefined
+  );
+  const createContact = useCreateContactBackend();
+  const deleteContact = useDeleteContactBackend();
+  const importContacts = useImportContactsBackend();
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const [searchQuery, setSearchQuery] = useState("");
@@ -93,7 +100,6 @@ export default function Contacts() {
       name: newContact.name || undefined,
       tags: newContact.tags ? newContact.tags.split(",").map(t => t.trim()) : [],
       opt_in: newContact.opt_in,
-      opt_in_at: newContact.opt_in ? new Date().toISOString() : undefined,
     });
     
     setIsAddOpen(false);
@@ -184,14 +190,19 @@ export default function Contacts() {
     }
 
     try {
-      await bulkCreate.mutateAsync(importPreview);
+      // Преобразуем данные для backend API
+      const contactsToImport = importPreview.map((c: any) => ({
+        phone: c.phone,
+        name: c.name || undefined,
+        country: c.country || undefined,
+        tags: c.tags || [],
+        custom_fields: c.custom_fields || undefined,
+      }));
+      
+      await importContacts.mutateAsync(contactsToImport);
       setIsImportOpen(false);
       setImportPreview([]);
       setImportErrors([]);
-      toast({ 
-        title: "Import Complete", 
-        description: `Imported ${importPreview.length} contacts` 
-      });
     } catch (error: any) {
       toast({ title: "Import Error", description: error.message, variant: "destructive" });
     }
@@ -279,7 +290,7 @@ export default function Contacts() {
 
       <div className="p-6">
         {/* Actions */}
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex items-center justify-between gap-4">
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
@@ -288,6 +299,37 @@ export default function Contacts() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
+          </div>
+          
+          {/* Переключатель источника контактов */}
+          <div className="flex items-center gap-2">
+            <Label className="text-sm text-muted-foreground">Source:</Label>
+            <div className="flex gap-1 rounded-lg border border-border bg-background p-1">
+              <Button
+                variant={contactSource === 'all' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setContactSource('all')}
+                className="h-8"
+              >
+                All
+              </Button>
+              <Button
+                variant={contactSource === 'manual' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setContactSource('manual')}
+                className="h-8"
+              >
+                Manual
+              </Button>
+              <Button
+                variant={contactSource === 'auto' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setContactSource('auto')}
+                className="h-8"
+              >
+                Auto
+              </Button>
+            </div>
           </div>
           {!isUser && (
             <div className="flex gap-2">
@@ -446,8 +488,8 @@ export default function Contacts() {
                       <Button variant="outline" onClick={() => setIsImportOpen(false)}>
                         Cancel
                       </Button>
-                      <Button onClick={handleImportConfirm} disabled={bulkCreate.isPending}>
-                        {bulkCreate.isPending ? "Importing..." : `Import ${importPreview.length} contacts`}
+                      <Button onClick={handleImportConfirm} disabled={importContacts.isPending}>
+                        {importContacts.isPending ? "Importing..." : `Import ${importPreview.length} contacts`}
                       </Button>
                     </div>
                   </>
@@ -517,6 +559,7 @@ export default function Contacts() {
                   <TableHead>Name</TableHead>
                   <TableHead>Country</TableHead>
                   <TableHead>Tags</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead>Opt-in</TableHead>
                   <TableHead>Last Interaction</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
@@ -543,6 +586,14 @@ export default function Contacts() {
                           </Badge>
                         ))}
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={contact.source === 'auto' ? "outline" : "secondary"}
+                        className={contact.source === 'auto' ? "border-blue-500 text-blue-600" : ""}
+                      >
+                        {contact.source === 'auto' ? 'Auto' : 'Manual'}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={contact.opt_in ? "default" : "secondary"}>
