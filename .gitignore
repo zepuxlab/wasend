@@ -59,3 +59,15 @@ coverage/
 *.seed
 *.pid.lock
 
+# SQL files
+*.sql
+**/*.sql
+
+# Markdown files
+*.md
+**/*.md
+
+# CSV files
+*.csv
+**/*.csv
+
