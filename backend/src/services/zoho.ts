@@ -318,14 +318,15 @@ class ZohoService {
 
       // Добавляем ссылку на диалог в Zoho
       const zohoChatUrl = this.getZohoChatUrl(leadId, message.phone);
-      noteContent += `\n\n💬 [Open Chat in Zoho](${zohoChatUrl})`;
+      noteContent += `\n\n💬 Open in Zoho: ${zohoChatUrl}`;
 
-      await this.api.post(
-        `/crm/v2/Leads/${leadId}/Notes`,
+      // Используем axios напрямую с полным URL
+      const response = await axios.post(
+        `${config.zoho.apiDomain}/crm/v2/Leads/${leadId}/Notes`,
         {
           data: [
             {
-              Note_Title: `WhatsApp Message - ${directionLabel}`,
+              Note_Title: `WhatsApp Message - ${directionLabel.replace(/[📥📤]/g, '').trim()}`,
               Note_Content: noteContent,
             },
           ],
@@ -338,9 +339,11 @@ class ZohoService {
         }
       );
 
+      console.log('Zoho: Note added successfully:', response.data);
       return true;
     } catch (error: any) {
       console.error('Zoho: Failed to add note:', error.response?.data || error.message);
+      console.error('Zoho: Note error details:', JSON.stringify(error.response?.data, null, 2));
       return false;
     }
   }
