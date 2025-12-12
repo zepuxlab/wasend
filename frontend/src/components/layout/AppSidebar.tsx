@@ -7,7 +7,6 @@ import {
   Users,
   Activity,
   Settings,
-  MessageCircle,
   UsersRound,
   LogOut,
 } from "lucide-react";
@@ -59,12 +58,17 @@ export function AppSidebar() {
       <div className="flex h-full flex-col">
         {/* Logo */}
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
-            <MessageCircle className="h-4 w-4 text-primary-foreground" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: '#257662' }}>
+            <img 
+              src="https://office.ampriomilano.com/b2b/images/AM_logo_mini.svg" 
+              alt="AMSendler Logo" 
+              className="h-10 w-10"
+              style={{ filter: 'brightness(0) invert(1)' }}
+            />
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-foreground">Amprio Milano</span>
-            <span className="text-xs text-sidebar-muted">WhatsApp Admin</span>
+            <span className="text-sm font-semibold text-foreground">AMSendler</span>
+            <span className="text-xs text-sidebar-muted">WhatsApp Sendler</span>
           </div>
         </div>
 
