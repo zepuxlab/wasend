@@ -67,7 +67,7 @@ function AppContent() {
               <li>CORS настроен на бэкенде</li>
             </ul>
             <p className="mt-3 text-xs">
-              URL бэкенда: <code className="bg-background px-1 rounded">{localStorage.getItem('backend_api_url') || 'http://localhost:3001/api'}</code>
+              URL бэкенда: <code className="bg-background px-1 rounded">{localStorage.getItem('backend_api_url') || '/wasend/api'}</code>
             </p>
           </div>
           <button

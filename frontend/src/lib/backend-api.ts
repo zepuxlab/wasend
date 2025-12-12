@@ -14,12 +14,14 @@
 
 // Configure this to your backend server URL
 const getBaseUrl = () => {
-  // In production, use relative path through nginx
+  // Always use relative path through nginx in production
+  // In development, can be overridden via localStorage
   if (import.meta.env.PROD) {
     return '/wasend/api';
   }
   const stored = localStorage.getItem('backend_api_url');
-  return stored || 'http://localhost:3001/api';
+  // Default to relative path for dev too (if running through nginx)
+  return stored || '/wasend/api';
 };
 
 // Get auth token (if your backend requires authentication)

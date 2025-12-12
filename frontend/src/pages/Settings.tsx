@@ -35,7 +35,7 @@ export default function Settings() {
   // Load saved config
   useEffect(() => {
     // Load Backend API URL
-    setBackendUrl(localStorage.getItem('backend_api_url') || 'http://localhost:3001/api');
+    setBackendUrl(localStorage.getItem('backend_api_url') || '/wasend/api');
     
     // Load WhatsApp settings from localStorage
     setWhatsappToken(localStorage.getItem('whatsapp_token') || '');
@@ -172,7 +172,7 @@ export default function Settings() {
                   <div className="flex gap-2">
                     <Input
                       id="backend-url"
-                      placeholder="http://localhost:3001/api"
+                      placeholder="/wasend/api"
                       value={backendUrl}
                       onChange={(e) => setBackendUrl(e.target.value)}
                       className="font-mono"
@@ -182,7 +182,7 @@ export default function Settings() {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    Пример: <code>http://localhost:3001/api</code> или <code>https://api.yourdomain.com</code>
+                    Пример: <code>/wasend/api</code> (относительный путь) или <code>https://api.yourdomain.com</code>
                   </p>
                 </div>
               </div>

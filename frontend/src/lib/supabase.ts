@@ -13,7 +13,11 @@ let configPromise: Promise<void> | null = null;
 
 // Get backend URL
 function getBackendUrl(): string {
-  return localStorage.getItem('backend_api_url') || 'http://localhost:3001/api';
+  // Use relative path in production, allow override in dev
+  if (import.meta.env.PROD) {
+    return '/wasend/api';
+  }
+  return localStorage.getItem('backend_api_url') || '/wasend/api';
 }
 
 // Fetch config from backend
