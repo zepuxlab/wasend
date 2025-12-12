@@ -232,7 +232,7 @@ router.post(
         success: true,
         message: 'Test incoming message created and synced with Zoho',
         phone,
-        message,
+        message_text: message,
       });
     } catch (error: any) {
       console.error('Error creating test incoming message:', error);
