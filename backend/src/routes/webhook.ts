@@ -3,6 +3,7 @@ import { config } from '../config/env';
 import { db, dbSupabase } from '../services/supabase';
 import { MetaWebhookMessage, MetaWebhookStatus } from '../types';
 import { zohoService } from '../services/zoho';
+import crypto from 'crypto';
 
 const router = Router();
 
@@ -19,11 +20,57 @@ router.get('/', (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Валидация подписи webhook от Meta для безопасности
+ * Meta отправляет подпись в заголовке X-Hub-Signature-256
+ */
+function verifyWebhookSignature(
+  payload: string,
+  signature: string | undefined,
+  secret: string
+): boolean {
+  if (!signature) {
+    return false; // В production лучше требовать подпись
+  }
+
+  try {
+    // Meta использует формат: sha256=<hash>
+    const [algorithm, hash] = signature.split('=');
+    
+    if (algorithm !== 'sha256') {
+      return false;
+    }
+
+    // Вычисляем HMAC SHA-256
+    const hmac = crypto.createHmac('sha256', secret);
+    hmac.update(payload);
+    const calculatedHash = hmac.digest('hex');
+
+    // Сравниваем подписи безопасным способом
+    return crypto.timingSafeEqual(
+      Buffer.from(hash, 'hex'),
+      Buffer.from(calculatedHash, 'hex')
+    );
+  } catch (error) {
+    console.error('Error verifying webhook signature:', error);
+    return false;
+  }
+}
+
 // POST /api/webhook - Получение событий от Meta
 router.post('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Meta требует быстрый ответ (200 OK)
     res.status(200).send('OK');
+
+    // Валидация подписи webhook (опционально, можно включить в production)
+    // Для этого нужен App Secret в конфиге
+    // const signature = req.headers['x-hub-signature-256'] as string;
+    // const rawBody = JSON.stringify(req.body);
+    // if (!verifyWebhookSignature(rawBody, signature, config.meta.appSecret)) {
+    //   console.warn('Invalid webhook signature');
+    //   return; // Игнорируем запрос с неверной подписью
+    // }
 
     const body = req.body;
 
