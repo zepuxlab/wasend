@@ -341,15 +341,15 @@ export default function Users() {
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Удалить пользователя?</AlertDialogTitle>
+                              <AlertDialogTitle>Delete User?</AlertDialogTitle>
                               <AlertDialogDescription>
-                                Пользователь {u.email} будет удалён. Это действие нельзя отменить.
+                                User {u.email} will be deleted. This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                              <AlertDialogCancel>Отмена</AlertDialogCancel>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
                               <AlertDialogAction onClick={() => handleDeleteUser(u.id)}>
-                                Удалить
+                                Delete
                               </AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>

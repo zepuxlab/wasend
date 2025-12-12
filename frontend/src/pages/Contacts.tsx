@@ -362,9 +362,9 @@ export default function Contacts() {
             <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
               <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Импорт контактов из CSV</DialogTitle>
+                  <DialogTitle>Import Contacts from CSV</DialogTitle>
                   <DialogDescription>
-                    Проверьте данные перед импортом
+                    Review data before importing
                   </DialogDescription>
                 </DialogHeader>
                 
