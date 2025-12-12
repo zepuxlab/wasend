@@ -1,12 +1,7 @@
 import { Worker, Job } from 'bullmq';
-import { config } from '../config/env';
-import Redis from 'ioredis';
 import { db } from '../services/supabase';
 import { metaApi, buildTemplateComponents } from '../services/metaApi';
-
-const connection = new Redis(config.redis.url, {
-  maxRetriesPerRequest: null, // Требуется для BullMQ
-});
+import { connection } from '../services/queue';
 
 interface MessageJobData {
   recipientId: string;

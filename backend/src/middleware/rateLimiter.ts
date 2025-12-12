@@ -10,6 +10,10 @@ export const apiRateLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Отключить проверку trust proxy, так как мы используем его для Nginx
+  validate: {
+    trustProxy: false,
+  },
 });
 
 export const webhookRateLimiter = rateLimit({
@@ -19,6 +23,10 @@ export const webhookRateLimiter = rateLimit({
     error: true,
     message: 'Too many webhook requests',
     code: 'RATE_LIMIT_EXCEEDED',
+  },
+  // Отключить проверку trust proxy для webhook
+  validate: {
+    trustProxy: false,
   },
 });
 

@@ -496,12 +496,10 @@ export interface Campaign {
   template?: Template;
   status: 'draft' | 'ready' | 'running' | 'paused' | 'stopped' | 'completed' | 'failed';
   variable_mapping: Record<string, string>;
-  rate_limit: {
-    batch: number;
-    delay_minutes: number;
-    hourly_cap?: number;
-    daily_cap?: number;
-  };
+  rate_limit_per_batch: number;
+  rate_limit_delay_seconds: number;
+  hourly_cap: number | null;
+  daily_cap: number | null;
   total_recipients: number;
   sent_count: number;
   delivered_count: number;

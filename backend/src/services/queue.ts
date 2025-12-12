@@ -2,8 +2,43 @@ import { Queue, Worker, QueueEvents } from 'bullmq';
 import { config } from '../config/env';
 import Redis from 'ioredis';
 
-const connection = new Redis(config.redis.url, {
+export const connection = new Redis(config.redis.url, {
   maxRetriesPerRequest: null, // Требуется для BullMQ
+  retryStrategy: (times) => {
+    // Экспоненциальная задержка с максимумом 3 секунды
+    const delay = Math.min(times * 50, 3000);
+    return delay;
+  },
+  reconnectOnError: (err) => {
+    const targetError = 'READONLY';
+    if (err.message.includes(targetError)) {
+      return true; // Переподключиться при READONLY ошибке
+    }
+    return false;
+  },
+  enableOfflineQueue: false, // Отключить очередь офлайн, чтобы не накапливать запросы
+});
+
+// Обработка ошибок соединения с Redis
+connection.on('error', (err) => {
+  console.error('Redis connection error:', err.message);
+  // Не завершаем процесс, позволяем переподключиться
+});
+
+connection.on('connect', () => {
+  console.log('✅ Redis connected');
+});
+
+connection.on('ready', () => {
+  console.log('✅ Redis ready');
+});
+
+connection.on('close', () => {
+  console.warn('⚠️ Redis connection closed');
+});
+
+connection.on('reconnecting', () => {
+  console.log('🔄 Redis reconnecting...');
 });
 
 // Очередь для отправки сообщений

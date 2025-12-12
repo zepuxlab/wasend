@@ -24,6 +24,7 @@ import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "@/hooks/use-toast";
+import { formatAed, formatMessageCost, getMessageCostAed } from "@/lib/currency";
 
 const steps = [
   { id: 1, name: "Template", icon: MessageSquare },
@@ -61,7 +62,7 @@ export default function CreateBroadcast() {
   const selectedTemplate = templates?.find((t: any) => t.id === formData.templateId);
   const templateVariables = selectedTemplate?.variables || [];
 
-  const getRecipientCount = () => {
+  const getRecipientCount = (): number => {
     if (formData.recipientMethod === "all") {
       return contacts?.filter((c: any) => c.opt_in)?.length || 0;
     }
@@ -69,8 +70,8 @@ export default function CreateBroadcast() {
       return formData.numbers.split("\n").filter(Boolean).length;
     }
     if (formData.recipientMethod === "list" && formData.selectedListId) {
-      // Would need to fetch list count
-      return "—";
+      // Would need to fetch list count - return 0 for now
+      return 0;
     }
     return 0;
   };
@@ -481,10 +482,21 @@ export default function CreateBroadcast() {
                   <span className="text-muted-foreground">Recipients</span>
                   <span className="font-medium text-lg">{getRecipientCount()}</span>
                 </div>
-                <div className="flex justify-between items-center py-2">
+                <div className="flex justify-between items-center py-2 border-b">
                   <span className="text-muted-foreground">Rate</span>
                   <span className="font-medium">
                     {formData.rateLimitPerBatch} / batch, delay {formData.rateLimitDelaySeconds}s
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-muted-foreground">Estimated cost</span>
+                  <span className="font-medium text-primary">
+                    {(() => {
+                      const count = getRecipientCount();
+                      if (count === 0) return "—";
+                      const cost = getMessageCostAed((selectedTemplate?.category as 'MARKETING' | 'UTILITY' | 'AUTHENTICATION') || 'MARKETING');
+                      return `≈ ${formatAed(count * cost)}`;
+                    })()}
                   </span>
                 </div>
               </div>

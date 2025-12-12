@@ -46,6 +46,7 @@ import {
 import { format } from "date-fns";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
+import { formatAed, formatMessageCost, getMessageCostAed } from "@/lib/currency";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export default function CampaignDetail() {
@@ -238,7 +239,7 @@ export default function CampaignDetail() {
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Template</p>
               <code className="text-sm bg-muted px-2 py-0.5 rounded">
-                {campaign.template?.name || campaign.templates?.name || "—"}
+                {campaign.template?.name || "—"}
               </code>
             </div>
           </div>
@@ -349,7 +350,12 @@ export default function CampaignDetail() {
           </Card>
 
           <Card className="p-6">
-            <h3 className="font-semibold mb-4">Rate Limits</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold">Rate Limits</h3>
+              <Badge variant="outline" className="text-xs">
+                Cost: {formatMessageCost('MARKETING')} per message
+              </Badge>
+            </div>
             <div className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Messages per batch</span>
@@ -361,11 +367,25 @@ export default function CampaignDetail() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Hourly cap</span>
-                <span>{campaign.hourly_cap || "No limit"}</span>
+                <span>
+                  {campaign.hourly_cap || "No limit"}
+                  {campaign.hourly_cap && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      (≈ {formatAed(campaign.hourly_cap * getMessageCostAed('MARKETING'))})
+                    </span>
+                  )}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Daily cap</span>
-                <span>{campaign.daily_cap || "No limit"}</span>
+                <span>
+                  {campaign.daily_cap || "No limit"}
+                  {campaign.daily_cap && (
+                    <span className="text-xs text-muted-foreground ml-2">
+                      (≈ {formatAed(campaign.daily_cap * getMessageCostAed('MARKETING'))})
+                    </span>
+                  )}
+                </span>
               </div>
             </div>
           </Card>

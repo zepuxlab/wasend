@@ -20,6 +20,7 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { settingsBackendApi, ConnectionStatus } from "@/lib/backend-api";
 import { useAuth } from "@/hooks/useAuth";
+import { formatAed, formatMessageCost, getMessageCostAed } from "@/lib/currency";
 
 export default function Settings() {
   const { isUser } = useAuth();
@@ -326,11 +327,16 @@ export default function Settings() {
           <TabsContent value="campaigns" className="space-y-6">
             {/* Rate Limits */}
             <Card className="p-6">
-              <h3 className="text-base font-semibold text-foreground mb-4">
-                Default Rate Limits
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-base font-semibold text-foreground">
+                  Default Rate Limits
+                </h3>
+                <Badge variant="outline" className="text-xs">
+                  Message cost: {formatMessageCost('MARKETING')} per message
+                </Badge>
+              </div>
               <p className="text-sm text-muted-foreground mb-4">
-                Settings for new campaigns
+                Settings for new campaigns. Costs are displayed in AED (UAE Dirhams).
               </p>
 
               <div className="grid grid-cols-2 gap-4">
@@ -375,6 +381,14 @@ export default function Settings() {
                       })
                     }
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Maximum messages per hour
+                    {campaignSettings.defaultHourlyCap > 0 && (
+                      <span className="ml-2">
+                        (≈ {formatAed(campaignSettings.defaultHourlyCap * getMessageCostAed('MARKETING'))})
+                      </span>
+                    )}
+                  </p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="daily-cap">Daily cap</Label>
@@ -389,6 +403,14 @@ export default function Settings() {
                       })
                     }
                   />
+                  <p className="text-xs text-muted-foreground">
+                    Maximum messages per day
+                    {campaignSettings.defaultDailyCap > 0 && (
+                      <span className="ml-2">
+                        (≈ {formatAed(campaignSettings.defaultDailyCap * getMessageCostAed('MARKETING'))})
+                      </span>
+                    )}
+                  </p>
                 </div>
               </div>
             </Card>
@@ -426,19 +448,30 @@ export default function Settings() {
                 <Separator />
 
                 <div className="space-y-2">
-                  <Label htmlFor="daily-limit">Daily limit (€)</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="daily-limit">Daily limit (AED)</Label>
+                    <span className="text-xs text-muted-foreground">
+                      Message cost: {formatMessageCost('MARKETING')}
+                    </span>
+                  </div>
                   <Input
                     id="daily-limit"
                     type="number"
-                    value={campaignSettings.dailyLimitAmount}
-                    onChange={(e) =>
+                    value={Math.round(campaignSettings.dailyLimitAmount * 3.67)}
+                    onChange={(e) => {
+                      const aedValue = parseInt(e.target.value) || 0;
+                      // Convert AED to USD for storage
+                      const usdValue = Math.round((aedValue / 3.67) * 100) / 100;
                       setCampaignSettings({
                         ...campaignSettings,
-                        dailyLimitAmount: parseInt(e.target.value) || 100,
-                      })
-                    }
+                        dailyLimitAmount: usdValue,
+                      });
+                    }}
                     className="w-32"
                   />
+                  <p className="text-xs text-muted-foreground">
+                    ≈ ${campaignSettings.dailyLimitAmount.toFixed(2)} USD
+                  </p>
                 </div>
 
                 <div className="flex items-center justify-between">
