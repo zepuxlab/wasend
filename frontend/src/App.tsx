@@ -82,7 +82,7 @@ function AppContent() {
   }
 
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/wasend">
       <Routes>
         <Route path="/auth" element={<Auth />} />
         <Route element={<MainLayout />}>
