@@ -164,7 +164,10 @@ export default function Chats() {
               filteredChats.map((chat: Chat) => (
                 <button
                   key={chat.id}
-                  onClick={() => setSelectedChatId(chat.id)}
+                  onClick={() => {
+                    setSelectedChatId(chat.id);
+                    setSearchParams({ chat: chat.id });
+                  }}
                   className={cn(
                     "flex w-full items-start gap-3 border-b border-border p-4 text-left transition-colors hover:bg-accent",
                     selectedChatId === chat.id && "bg-accent"
