@@ -7,6 +7,7 @@ module.exports = {
       cwd: '/home/ec2-user/officeamprio/wasendler/backend',
       instances: 1,
       exec_mode: 'fork',
+      env_file: '/home/ec2-user/officeamprio/wasendler/.env',
       env: {
         NODE_ENV: 'production',
         PORT: 3005,
