@@ -333,7 +333,7 @@ class ZohoService {
       // В Zoho используется ID, а не номер, поэтому используем ссылку на наш диалог
       if (message.chatId) {
         const chatUrl = `${config.frontendUrl}/wasend/chats?chat=${message.chatId}`;
-        noteContent += `\n\n💬 [Open Chat in Admin Panel](${chatUrl})`;
+        noteContent += `\n\n💬 Open Chat in Admin Panel: ${chatUrl}`;
       }
 
       // Используем axios напрямую с полным URL
