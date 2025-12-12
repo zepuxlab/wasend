@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { TopBar } from "@/components/layout/TopBar";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 
 export default function Chats() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { isConfigured } = useSupabase();
   const { isUser } = useAuth();
   
@@ -39,6 +40,14 @@ export default function Chats() {
   const resolveChat = useResolveChatFromBackend();
   
   const [selectedChatId, setSelectedChatId] = useState<string | null>(null);
+
+  // Получить chat ID из URL параметров
+  useEffect(() => {
+    const chatIdFromUrl = searchParams.get('chat');
+    if (chatIdFromUrl) {
+      setSelectedChatId(chatIdFromUrl);
+    }
+  }, [searchParams]);
   const [reply, setReply] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [tagDialogOpen, setTagDialogOpen] = useState(false);

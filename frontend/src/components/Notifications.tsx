@@ -57,7 +57,7 @@ export function Notifications() {
       console.error('Failed to mark notification as read:', error);
     }
 
-    // Перейти в чат
+    // Перейти в чат - используем query параметр для выбора чата
     if (notification.chat_id) {
       navigate(`/chats?chat=${notification.chat_id}`);
       setIsOpen(false);
