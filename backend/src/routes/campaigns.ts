@@ -226,8 +226,12 @@ router.delete(
         });
 
         // Очистить очередь от задач этой кампании
-        const { queueUtils } = await import('../services/queue');
-        await queueUtils.clean(id);
+        try {
+          await queueUtils.clean(id);
+        } catch (queueError) {
+          // Игнорируем ошибки очистки очереди, продолжаем удаление
+          console.warn('Failed to clean queue for campaign:', queueError);
+        }
       }
 
       // Удалить кампанию (теперь она в статусе stopped или уже была в draft/stopped/completed/failed)
