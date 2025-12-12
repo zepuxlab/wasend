@@ -2,7 +2,7 @@ import rateLimit from 'express-rate-limit';
 
 export const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 минут
-  max: 100, // лимит 100 запросов с одного IP
+  max: 500, // лимит 500 запросов с одного IP (увеличено для админ-панели)
   message: {
     error: true,
     message: 'Too many requests from this IP, please try again later',
@@ -14,6 +14,10 @@ export const apiRateLimiter = rateLimit({
   validate: {
     trustProxy: false,
   },
+  // Пропускать успешные запросы при подсчете (не считать 2xx ответы)
+  skipSuccessfulRequests: false,
+  // Пропускать неудачные запросы (не считать 4xx/5xx ответы)
+  skipFailedRequests: false,
 });
 
 export const webhookRateLimiter = rateLimit({

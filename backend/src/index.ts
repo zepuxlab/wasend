@@ -34,8 +34,14 @@ app.use(corsMiddleware);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting
-app.use('/api/', apiRateLimiter);
+// Rate limiting (исключаем settings из строгого лимита)
+app.use('/api/', (req, res, next) => {
+  // Для настроек используем более мягкий лимит
+  if (req.path.startsWith('/api/settings')) {
+    return next(); // Пропускаем rate limiter для настроек
+  }
+  return apiRateLimiter(req, res, next);
+});
 app.use('/api/webhook', webhookRateLimiter);
 
 // Health check
