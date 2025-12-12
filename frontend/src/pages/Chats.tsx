@@ -359,49 +359,49 @@ export default function Chats() {
               </ScrollArea>
 
               {/* Reply Input */}
-              {!isUser && (
-                <div className="border-t border-border bg-card p-4">
-                  {canReply ? (
-                    <>
-                      <div className="mx-auto flex max-w-2xl gap-3">
-                        <Input
-                          placeholder="Type a message..."
-                          value={reply}
-                          onChange={(e) => setReply(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          className="flex-1"
-                          disabled={sendMessage.isPending}
-                        />
-                        <Button
-                          onClick={handleSendMessage}
-                          disabled={!reply.trim() || sendMessage.isPending}
-                        >
-                          {sendMessage.isPending ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Send className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </div>
-                      {replyWindowExpires && (
-                        <p className="mx-auto mt-2 max-w-2xl text-xs text-muted-foreground flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          Reply window expires {formatDistanceToNow(new Date(replyWindowExpires), { addSuffix: true })}
-                        </p>
-                      )}
-                    </>
-                  ) : (
-                    <div className="mx-auto max-w-2xl text-center">
-                      <p className="text-sm text-muted-foreground">
-                        ⚠️ 24-hour reply window expired — Use a template to re-engage
+              <div className="border-t border-border bg-card p-4">
+                {canReply ? (
+                  <>
+                    <div className="mx-auto flex max-w-2xl gap-3">
+                      <Input
+                        placeholder="Type a message..."
+                        value={reply}
+                        onChange={(e) => setReply(e.target.value)}
+                        onKeyPress={handleKeyPress}
+                        className="flex-1"
+                        disabled={sendMessage.isPending}
+                      />
+                      <Button
+                        onClick={handleSendMessage}
+                        disabled={!reply.trim() || sendMessage.isPending}
+                      >
+                        {sendMessage.isPending ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <Send className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+                    {replyWindowExpires && (
+                      <p className="mx-auto mt-2 max-w-2xl text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        Reply window expires {formatDistanceToNow(new Date(replyWindowExpires), { addSuffix: true })}
                       </p>
+                    )}
+                  </>
+                ) : (
+                  <div className="mx-auto max-w-2xl text-center">
+                    <p className="text-sm text-muted-foreground">
+                      ⚠️ 24-hour reply window expired — Use a template to re-engage
+                    </p>
+                    {!isUser && (
                       <Button variant="outline" size="sm" className="mt-2">
                         Send Template
                       </Button>
-                    </div>
-                  )}
-                </div>
-              )}
+                    )}
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
