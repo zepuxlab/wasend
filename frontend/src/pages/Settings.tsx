@@ -12,7 +12,11 @@ import {
   CheckCircle,
   RefreshCw,
   XCircle,
+  Database,
+  Server,
+  Webhook,
   MessageSquare,
+  Building2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { settingsBackendApi, ConnectionStatus } from "@/lib/backend-api";
@@ -20,7 +24,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { formatAed, formatMessageCost, getMessageCostAed } from "@/lib/currency";
 
 export default function Settings() {
-  const { isUser } = useAuth();
+  const { isUser, isAdmin } = useAuth();
   const [status, setStatus] = useState<ConnectionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
@@ -136,47 +140,6 @@ export default function Settings() {
 
         {/* Connection Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Meta API Status */}
-          <Card className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Server
-                  className={`h-6 w-6 ${
-                    status?.backend_api?.connected
-                      ? "text-success"
-                      : "text-destructive"
-                  }`}
-                />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-foreground">Backend API</h3>
-                  <Badge
-                    className={
-                      status?.backend_api?.connected
-                        ? "bg-success/10 text-success"
-                        : "bg-destructive/10 text-destructive"
-                    }
-                  >
-                    {status?.backend_api?.connected
-                      ? "Online"
-                      : "Offline"}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {status?.backend_api?.connected
-                    ? "Backend server is running"
-                    : "Backend server is not responding"}
-                </p>
-                {status?.backend_api?.last_check && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Last check: {formatTime(status.backend_api.last_check)}
-                  </p>
-                )}
-              </div>
-            </div>
-          </Card>
-
           {/* Meta API Status */}
           <Card className="p-6">
             <div className="flex items-start gap-4">
