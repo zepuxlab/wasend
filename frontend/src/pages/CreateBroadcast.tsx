@@ -25,9 +25,9 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "@/hooks/use-toast";
 
 const steps = [
-  { id: 1, name: "Шаблон", icon: MessageSquare },
-  { id: 2, name: "Получатели", icon: Users },
-  { id: 3, name: "Запуск", icon: Send },
+  { id: 1, name: "Template", icon: MessageSquare },
+  { id: 2, name: "Recipients", icon: Users },
+  { id: 3, name: "Launch", icon: Send },
 ];
 
 export default function CreateBroadcast() {
@@ -69,13 +69,13 @@ export default function CreateBroadcast() {
 
   const handleNext = () => {
     if (currentStep === 1 && !formData.templateId) {
-      toast({ title: "Ошибка", description: "Выберите шаблон", variant: "destructive" });
+      toast({ title: "Error", description: "Please select a template", variant: "destructive" });
       return;
     }
     if (currentStep === 2) {
       const count = getRecipientCount();
       if (count === 0) {
-        toast({ title: "Ошибка", description: "Добавьте получателей", variant: "destructive" });
+        toast({ title: "Error", description: "Please add recipients", variant: "destructive" });
         return;
       }
     }
@@ -124,7 +124,7 @@ export default function CreateBroadcast() {
         ...(contactTags && { contact_tags: contactTags }),
       });
 
-      toast({ title: "Готово", description: "Кампания создана" });
+      toast({ title: "Success", description: "Campaign created" });
       navigate(`/broadcasts/${campaign.id}`);
     } catch (error) {
       // Error toast is handled by the mutation
@@ -136,15 +136,15 @@ export default function CreateBroadcast() {
   if (!isConfigured) {
     return (
       <div className="min-h-screen">
-        <TopBar title="Новая рассылка" subtitle="Создание WhatsApp кампании" />
+        <TopBar title="New Broadcast" subtitle="Create WhatsApp campaign" />
         <div className="p-6">
           <Card className="p-6">
             <EmptyState
               icon={Send}
-              title="База данных не подключена"
-              description="Подключите Supabase в настройках"
+              title="Database not connected"
+              description="Connect to Supabase in Settings"
               action={{
-                label: "Настройки",
+                label: "Settings",
                 onClick: () => navigate("/settings"),
               }}
             />
@@ -157,8 +157,8 @@ export default function CreateBroadcast() {
   return (
     <div className="min-h-screen">
       <TopBar
-        title="Новая рассылка"
-        subtitle="Выберите шаблон Meta и получателей"
+        title="New Broadcast"
+        subtitle="Select Meta template and recipients"
       />
 
       <div className="p-6">
@@ -169,7 +169,7 @@ export default function CreateBroadcast() {
           onClick={() => navigate("/broadcasts")}
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Назад к рассылкам
+          Back to Broadcasts
         </Button>
 
         {/* Steps Indicator */}
@@ -225,24 +225,24 @@ export default function CreateBroadcast() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-foreground">
-                  Выберите шаблон
+                  Select Template
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Шаблоны загружаются из Meta WhatsApp Business API
+                  Templates are loaded from Meta WhatsApp Business API
                 </p>
               </div>
 
               {templatesLoading ? (
                 <div className="text-center py-8 text-muted-foreground">
-                  Загрузка шаблонов...
+                  Loading templates...
                 </div>
               ) : templates?.length === 0 ? (
                 <EmptyState
                   icon={FileText}
-                  title="Нет шаблонов"
-                  description="Синхронизируйте шаблоны из Meta в разделе Templates"
+                  title="No Templates"
+                  description="Sync templates from Meta in the Templates section"
                   action={{
-                    label: "Перейти к шаблонам",
+                    label: "Go to Templates",
                     onClick: () => navigate("/templates"),
                   }}
                 />
@@ -295,9 +295,9 @@ export default function CreateBroadcast() {
               {selectedTemplate && templateVariables.length > 0 && (
                 <div className="space-y-4 pt-4 border-t">
                   <div>
-                    <Label>Маппинг переменных</Label>
+                    <Label>Variable Mapping</Label>
                     <p className="text-xs text-muted-foreground">
-                      Укажите какие данные контакта подставлять в переменные
+                      Specify which contact data to use for variables
                     </p>
                   </div>
                   {templateVariables.map((varName: string, index: number) => (
@@ -319,12 +319,12 @@ export default function CreateBroadcast() {
                         }
                       >
                         <SelectTrigger className="w-48">
-                          <SelectValue placeholder="Выберите поле" />
+                          <SelectValue placeholder="Select field" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="name">Имя</SelectItem>
-                          <SelectItem value="phone">Телефон</SelectItem>
-                          <SelectItem value="country">Страна</SelectItem>
+                          <SelectItem value="name">Name</SelectItem>
+                          <SelectItem value="phone">Phone</SelectItem>
+                          <SelectItem value="country">Country</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -339,10 +339,10 @@ export default function CreateBroadcast() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-foreground">
-                  Выберите получателей
+                  Select Recipients
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Кому отправить рассылку?
+                  Who should receive the broadcast?
                 </p>
               </div>
 
@@ -353,22 +353,22 @@ export default function CreateBroadcast() {
                 }
               >
                 <TabsList className="grid w-full grid-cols-3">
-                  <TabsTrigger value="all">Все с opt-in</TabsTrigger>
-                  <TabsTrigger value="list">Из списка</TabsTrigger>
-                  <TabsTrigger value="paste">Вручную</TabsTrigger>
+                  <TabsTrigger value="all">All with opt-in</TabsTrigger>
+                  <TabsTrigger value="list">From list</TabsTrigger>
+                  <TabsTrigger value="paste">Manual</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="all" className="mt-4">
                   <div className="rounded-lg border border-border p-6 text-center">
                     <Users className="mx-auto h-10 w-10 text-primary" />
                     <p className="mt-3 text-sm font-medium">
-                      Все контакты с согласием
+                      All contacts with consent
                     </p>
                     <p className="text-3xl font-bold mt-2 text-primary">
                       {contacts?.filter((c: any) => c.opt_in)?.length || 0}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      получателей
+                      recipients
                     </p>
                   </div>
                 </TabsContent>
@@ -382,12 +382,12 @@ export default function CreateBroadcast() {
                       }
                     >
                       <SelectTrigger>
-                        <SelectValue placeholder="Выберите список" />
+                        <SelectValue placeholder="Select list" />
                       </SelectTrigger>
                       <SelectContent>
                         {contactLists?.length === 0 ? (
                           <div className="p-2 text-sm text-muted-foreground">
-                            Нет сохранённых списков
+                            No saved lists
                           </div>
                         ) : (
                           contactLists?.map((list: any) => (
@@ -403,7 +403,7 @@ export default function CreateBroadcast() {
 
                 <TabsContent value="paste" className="mt-4">
                   <div className="space-y-2">
-                    <Label>Номера телефонов (по одному на строку)</Label>
+                    <Label>Phone Numbers (one per line)</Label>
                     <Textarea
                       placeholder={"+39123456789\n+39987654321\n+39111222333"}
                       className="min-h-[150px] font-mono text-sm"
@@ -413,7 +413,7 @@ export default function CreateBroadcast() {
                       }
                     />
                     <p className="text-sm text-muted-foreground">
-                      Введено: <strong>{formData.numbers.split("\n").filter(Boolean).length}</strong> номеров
+                      Entered: <strong>{formData.numbers.split("\n").filter(Boolean).length}</strong> numbers
                     </p>
                   </div>
                 </TabsContent>
@@ -421,10 +421,10 @@ export default function CreateBroadcast() {
 
               {/* Rate Limits */}
               <div className="space-y-4 pt-4 border-t">
-                <h4 className="font-medium">Ограничения скорости</h4>
+                <h4 className="font-medium">Rate Limits</h4>
                 <div className="grid gap-4 grid-cols-2">
                   <div className="space-y-2">
-                    <Label>Сообщений в пачке</Label>
+                    <Label>Messages per batch</Label>
                     <Input
                       type="number"
                       value={formData.rateLimitPerBatch}
@@ -434,7 +434,7 @@ export default function CreateBroadcast() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label>Задержка между пачками (сек)</Label>
+                    <Label>Delay between batches (sec)</Label>
                     <Input
                       type="number"
                       value={formData.rateLimitDelaySeconds}
@@ -453,37 +453,37 @@ export default function CreateBroadcast() {
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-foreground">
-                  Проверьте и создайте
+                  Review and Create
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Кампания будет создана как черновик
+                  Campaign will be created as draft
                 </p>
               </div>
 
               <div className="rounded-lg border border-border p-4 space-y-4">
                 <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-muted-foreground">Шаблон</span>
+                  <span className="text-muted-foreground">Template</span>
                   <span className="font-medium">{selectedTemplate?.name || "—"}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-muted-foreground">Язык</span>
+                  <span className="text-muted-foreground">Language</span>
                   <Badge variant="secondary">{selectedTemplate?.language || "—"}</Badge>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-muted-foreground">Получателей</span>
+                  <span className="text-muted-foreground">Recipients</span>
                   <span className="font-medium text-lg">{getRecipientCount()}</span>
                 </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-muted-foreground">Скорость</span>
+                  <span className="text-muted-foreground">Rate</span>
                   <span className="font-medium">
-                    {formData.rateLimitPerBatch} / пачка, пауза {formData.rateLimitDelaySeconds}с
+                    {formData.rateLimitPerBatch} / batch, delay {formData.rateLimitDelaySeconds}s
                   </span>
                 </div>
               </div>
 
               {selectedTemplate?.preview_text && (
                 <div className="space-y-2">
-                  <Label>Превью сообщения</Label>
+                  <Label>Message Preview</Label>
                   <div className="bg-muted/50 rounded-lg p-4">
                     <div className="bg-background rounded-lg p-3 shadow-sm max-w-sm">
                       <p className="text-sm">{selectedTemplate.preview_text}</p>
@@ -502,17 +502,17 @@ export default function CreateBroadcast() {
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Создание...
+                    Creating...
                   </>
                 ) : (
                   <>
                     <Check className="mr-2 h-4 w-4" />
-                    Создать кампанию
+                    Create Campaign
                   </>
                 )}
               </Button>
               <p className="text-xs text-muted-foreground text-center">
-                После создания перейдите на страницу кампании чтобы запустить рассылку
+                After creation, go to campaign page to start the broadcast
               </p>
             </div>
           )}
@@ -525,11 +525,11 @@ export default function CreateBroadcast() {
               disabled={currentStep === 1}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Назад
+              Back
             </Button>
             {currentStep < 3 && (
               <Button onClick={handleNext}>
-                Далее
+                Next
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
             )}

@@ -83,8 +83,8 @@ export default function Templates() {
   return (
     <div className="min-h-screen">
       <TopBar
-        title="Шаблоны"
-        subtitle="Шаблоны сообщений из Meta WhatsApp Business API"
+        title="Templates"
+        subtitle="Message templates from Meta WhatsApp Business API"
       />
 
       <div className="p-6">
@@ -92,9 +92,9 @@ export default function Templates() {
         <Card className="p-4 mb-6 border-primary/20 bg-primary/5">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-foreground">🔄 Синхронизация с Meta</h3>
+              <h3 className="font-semibold text-foreground">🔄 Sync with Meta</h3>
               <p className="text-sm text-muted-foreground">
-                Шаблоны загружаются из вашего WhatsApp Business аккаунта
+                Templates are loaded from your WhatsApp Business account
               </p>
             </div>
             <Button
@@ -102,7 +102,7 @@ export default function Templates() {
               disabled={syncTemplates.isPending}
             >
               <RefreshCw className={`mr-2 h-4 w-4 ${syncTemplates.isPending ? "animate-spin" : ""}`} />
-              {syncTemplates.isPending ? "Синхронизация..." : "Синхронизировать"}
+              {syncTemplates.isPending ? "Syncing..." : "Sync"}
             </Button>
           </div>
         </Card>
@@ -112,14 +112,14 @@ export default function Templates() {
           <div className="relative w-64">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Поиск шаблонов..."
+              placeholder="Search templates..."
               className="pl-9"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
           <p className="text-sm text-muted-foreground">
-            Всего шаблонов: <strong>{templates?.length || 0}</strong>
+            Total templates: <strong>{templates?.length || 0}</strong>
           </p>
         </div>
 

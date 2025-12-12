@@ -11,16 +11,20 @@ router.get(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const status: any = {
+        backend_api: {
+          connected: true, // Backend is running if we can respond
+          last_check: new Date().toISOString(),
+        },
+        database: {
+          connected: false,
+        },
         meta_api: {
           connected: false,
           last_check: new Date().toISOString(),
         },
         webhook: {
           active: !!config.meta.webhookVerifyToken,
-          last_received: null, // Можно добавить логику отслеживания последнего webhook
-        },
-        database: {
-          connected: false,
+          last_received: null,
         },
       };
 

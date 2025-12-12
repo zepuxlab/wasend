@@ -539,16 +539,23 @@ export interface PublicConfig {
 }
 
 export interface ConnectionStatus {
-  meta_api: {
+  backend_api?: {
     connected: boolean;
     last_check: string;
     error?: string;
   };
+  database: {
+    connected: boolean;
+  };
+  meta_api: {
+    connected: boolean;
+    last_check: string;
+    error?: string;
+    phone_number?: string;
+    business_name?: string;
+  };
   webhook: {
     active: boolean;
     last_received: string | null;
-  };
-  database: {
-    connected: boolean;
   };
 }

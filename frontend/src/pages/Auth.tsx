@@ -40,12 +40,12 @@ export default function Auth() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) {
-      toast({ title: "Ошибка", description: "База данных не подключена", variant: "destructive" });
+      toast({ title: "Error", description: "Database not connected", variant: "destructive" });
       return;
     }
 
     if (!email || !password) {
-      toast({ title: "Ошибка", description: "Заполните все поля", variant: "destructive" });
+      toast({ title: "Error", description: "Please fill all fields", variant: "destructive" });
       return;
     }
 
@@ -55,31 +55,31 @@ export default function Auth() {
 
     if (error) {
       if (error.message.includes("Invalid login credentials")) {
-        toast({ title: "Ошибка входа", description: "Неверный email или пароль", variant: "destructive" });
+        toast({ title: "Login Error", description: "Invalid email or password", variant: "destructive" });
       } else if (error.message.includes("Email not confirmed")) {
-        toast({ title: "Ошибка входа", description: "Email не подтверждён. Проверьте почту.", variant: "destructive" });
+        toast({ title: "Login Error", description: "Email not confirmed. Please check your email.", variant: "destructive" });
       } else {
-        toast({ title: "Ошибка входа", description: error.message, variant: "destructive" });
+        toast({ title: "Login Error", description: error.message, variant: "destructive" });
       }
     } else {
-      toast({ title: "Добро пожаловать!", description: "Вы успешно вошли в систему" });
+      toast({ title: "Welcome!", description: "You have successfully logged in" });
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!supabase) {
-      toast({ title: "Ошибка", description: "База данных не подключена", variant: "destructive" });
+      toast({ title: "Error", description: "Database not connected", variant: "destructive" });
       return;
     }
 
     if (!email || !password) {
-      toast({ title: "Ошибка", description: "Заполните все обязательные поля", variant: "destructive" });
+      toast({ title: "Error", description: "Please fill all required fields", variant: "destructive" });
       return;
     }
 
     if (password.length < 6) {
-      toast({ title: "Ошибка", description: "Пароль должен быть минимум 6 символов", variant: "destructive" });
+      toast({ title: "Error", description: "Password must be at least 6 characters", variant: "destructive" });
       return;
     }
 
@@ -102,9 +102,9 @@ export default function Auth() {
 
     if (error) {
       if (error.message.includes("already registered")) {
-        toast({ title: "Ошибка", description: "Пользователь с таким email уже существует", variant: "destructive" });
+        toast({ title: "Error", description: "User with this email already exists", variant: "destructive" });
       } else {
-        toast({ title: "Ошибка регистрации", description: error.message, variant: "destructive" });
+        toast({ title: "Registration Error", description: error.message, variant: "destructive" });
       }
     } else if (data.user) {
       // Try to sign in immediately after registration
@@ -115,13 +115,13 @@ export default function Auth() {
       
       if (signInError) {
         toast({ 
-          title: "Регистрация успешна!", 
-          description: "Теперь войдите с вашими данными" 
+          title: "Registration Successful!", 
+          description: "Please log in with your credentials" 
         });
       } else {
         toast({ 
-          title: "Добро пожаловать!", 
-          description: "Вы зарегистрированы. Дождитесь назначения прав администратором." 
+          title: "Welcome!", 
+          description: "You are registered. Please wait for admin to assign permissions." 
         });
       }
     }
@@ -132,12 +132,12 @@ export default function Auth() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md p-6 text-center">
           <MessageSquare className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-xl font-semibold mb-2">Подключение к серверу...</h2>
+          <h2 className="text-xl font-semibold mb-2">Connecting to server...</h2>
           <p className="text-muted-foreground mb-4">
-            Если это сообщение не исчезает, проверьте подключение к бэкенду
+            If this message doesn't disappear, please check backend connection
           </p>
           <Button onClick={() => window.location.reload()}>
-            Обновить страницу
+            Refresh Page
           </Button>
         </Card>
       </div>
@@ -152,13 +152,13 @@ export default function Auth() {
             <MessageSquare className="h-8 w-8 text-primary" />
             <h1 className="text-2xl font-bold">WhatsApp Admin</h1>
           </div>
-          <p className="text-muted-foreground">Панель управления рассылками</p>
+          <p className="text-muted-foreground">Broadcast Management Panel</p>
         </div>
 
         <Tabs defaultValue="login" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Вход</TabsTrigger>
-            <TabsTrigger value="signup">Регистрация</TabsTrigger>
+            <TabsTrigger value="login">Login</TabsTrigger>
+            <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
 
           <TabsContent value="login">
@@ -175,7 +175,7 @@ export default function Auth() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="login-password">Пароль</Label>
+                <Label htmlFor="login-password">Password</Label>
                 <Input
                   id="login-password"
                   type="password"
@@ -187,7 +187,7 @@ export default function Auth() {
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Войти
+                Login
               </Button>
             </form>
           </TabsContent>
@@ -195,11 +195,11 @@ export default function Auth() {
           <TabsContent value="signup">
             <form onSubmit={handleSignUp} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <Label htmlFor="signup-name">Имя (опционально)</Label>
+                <Label htmlFor="signup-name">Full Name (optional)</Label>
                 <Input
                   id="signup-name"
                   type="text"
-                  placeholder="Иван Иванов"
+                  placeholder="John Doe"
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   disabled={isLoading}
@@ -217,11 +217,11 @@ export default function Auth() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="signup-password">Пароль *</Label>
+                <Label htmlFor="signup-password">Password *</Label>
                 <Input
                   id="signup-password"
                   type="password"
-                  placeholder="Минимум 6 символов"
+                  placeholder="Minimum 6 characters"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
@@ -229,10 +229,10 @@ export default function Auth() {
               </div>
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Зарегистрироваться
+                Sign Up
               </Button>
               <p className="text-xs text-muted-foreground text-center">
-                Новые пользователи получают роль "user". Админ может изменить роль.
+                New users receive "user" role. Admin can change the role.
               </p>
             </form>
           </TabsContent>

@@ -39,9 +39,9 @@ export function AppSidebar() {
 
   const getRoleLabel = (role: string | null) => {
     switch (role) {
-      case 'admin': return 'Админ';
-      case 'manager': return 'Менеджер';
-      case 'user': return 'Пользователь';
+      case 'admin': return 'Admin';
+      case 'manager': return 'Manager';
+      case 'user': return 'User';
       default: return '';
     }
   };
@@ -102,7 +102,7 @@ export function AppSidebar() {
               )}
             >
               <UsersRound className="h-4 w-4 flex-shrink-0" />
-              Пользователи
+              Users
             </NavLink>
           )}
         </nav>
@@ -130,7 +130,7 @@ export function AppSidebar() {
                 onClick={handleSignOut}
               >
                 <LogOut className="mr-2 h-4 w-4" />
-                Выйти
+                Sign Out
               </Button>
             </>
           ) : (
@@ -140,7 +140,7 @@ export function AppSidebar() {
               className="w-full"
               onClick={() => navigate("/auth")}
             >
-              Войти
+              Sign In
             </Button>
           )}
           

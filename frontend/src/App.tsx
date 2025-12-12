@@ -30,11 +30,11 @@ function AppContent() {
     initSupabase()
       .then((success) => {
         if (!success) {
-          setInitError("Не удалось подключиться к бэкенду. Проверьте настройки.");
+          setInitError("Failed to connect to backend. Please check settings.");
         }
       })
       .catch((err) => {
-        setInitError(err.message || "Ошибка инициализации");
+        setInitError(err.message || "Initialization error");
       })
       .finally(() => {
         setIsInitializing(false);
@@ -46,7 +46,7 @@ function AppContent() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="mt-4 text-muted-foreground">Подключение к серверу...</p>
+          <p className="mt-4 text-muted-foreground">Connecting to server...</p>
         </div>
       </div>
     );
@@ -57,24 +57,24 @@ function AppContent() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="text-center max-w-md p-6">
           <div className="text-destructive text-5xl mb-4">⚠️</div>
-          <h1 className="text-xl font-semibold text-foreground mb-2">Ошибка подключения</h1>
+          <h1 className="text-xl font-semibold text-foreground mb-2">Connection Error</h1>
           <p className="text-muted-foreground mb-4">{initError}</p>
           <div className="bg-muted p-4 rounded-lg text-left text-sm">
-            <p className="font-medium mb-2">Проверьте:</p>
+            <p className="font-medium mb-2">Please check:</p>
             <ul className="list-disc list-inside space-y-1 text-muted-foreground">
-              <li>Бэкенд сервер запущен</li>
-              <li>URL бэкенда правильный</li>
-              <li>CORS настроен на бэкенде</li>
+              <li>Backend server is running</li>
+              <li>Backend URL is correct</li>
+              <li>CORS is configured on backend</li>
             </ul>
             <p className="mt-3 text-xs">
-              URL бэкенда: <code className="bg-background px-1 rounded">{localStorage.getItem('backend_api_url') || '/wasend/api'}</code>
+              Backend URL: <code className="bg-background px-1 rounded">{localStorage.getItem('backend_api_url') || '/wasend/api'}</code>
             </p>
           </div>
           <button
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90"
           >
-            Повторить
+            Retry
           </button>
         </div>
       </div>
