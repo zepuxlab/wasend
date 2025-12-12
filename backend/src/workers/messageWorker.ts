@@ -16,11 +16,49 @@ export const messageWorker = new Worker<MessageJobData>(
     const { recipientId, campaignId } = job.data;
 
     try {
+      // 0. Проверить статус кампании - если остановлена/удалена, пропустить задачу
+      const campaign = await db.campaigns.findById(campaignId);
+      if (!campaign) {
+        // Кампания удалена - обновить статус получателя и пропустить
+        try {
+          await db.campaignRecipients.update(recipientId, {
+            status: 'failed',
+            error_message: 'Campaign was deleted',
+          });
+        } catch (e) {
+          // Игнорировать ошибки обновления
+        }
+        return { success: false, skipped: true, reason: 'Campaign deleted' };
+      }
+
+      if (campaign.status === 'stopped' || campaign.status === 'failed' || campaign.status === 'completed') {
+        // Кампания остановлена - обновить статус получателя и пропустить
+        try {
+          await db.campaignRecipients.update(recipientId, {
+            status: 'pending',
+            error_message: `Campaign ${campaign.status}`,
+          });
+        } catch (e) {
+          // Игнорировать ошибки обновления
+        }
+        return { success: false, skipped: true, reason: `Campaign ${campaign.status}` };
+      }
+
       // 1. Получить данные получателя
       const recipient = await db.campaignRecipients.findById(recipientId);
-      const campaign = await db.campaigns.findById(campaignId);
+      if (!recipient) {
+        return { success: false, error: 'Recipient not found' };
+      }
+
       const template = await db.templates.findById(campaign.template_id);
+      if (!template) {
+        throw new Error('Template not found');
+      }
+
       const contact = await db.contacts.findById(recipient.contact_id);
+      if (!contact) {
+        throw new Error('Contact not found');
+      }
 
       // 2. Подготовить переменные
       const variables: Record<string, string> = {};
@@ -113,7 +151,12 @@ export const messageWorker = new Worker<MessageJobData>(
                   // Они появляются автоматически через нативную интеграцию Zoho
                   // Синхронизируем только входящие сообщения (inbound) в webhook.ts
 
-                  return { success: true, messageId: response.messages?.[0]?.id };
+                  // Возвращаем простой объект для BullMQ (избегаем вложенных объектов)
+                  const messageId = response?.messages?.[0]?.id || null;
+                  return { 
+                    success: true, 
+                    messageId: messageId || undefined 
+                  };
     } catch (error: any) {
       const errorMessage = error.message || 'Unknown error';
       const errorCode = error.response?.data?.error?.code;
@@ -174,7 +217,11 @@ export const messageWorker = new Worker<MessageJobData>(
       }
       
       // Для остальных ошибок просто вернуть неудачу
-      return { success: false, error: errorMessage };
+      // Убеждаемся, что возвращаем простой объект для BullMQ
+      return { 
+        success: false, 
+        error: errorMessage.substring(0, 200) // Ограничиваем длину для сериализации
+      };
     }
   },
   {

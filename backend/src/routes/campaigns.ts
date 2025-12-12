@@ -304,13 +304,35 @@ router.post(
         });
       }
 
+      // Проверить подключение к Meta API перед стартом
+      try {
+        const { metaApi } = await import('../services/metaApi');
+        await metaApi.getPhoneNumberInfo();
+      } catch (metaError: any) {
+        // Если нет подключения к Meta API, вернуть ошибку сразу
+        return res.status(503).json({
+          error: true,
+          message: 'Meta API connection failed. Please check your API credentials.',
+          code: 'META_API_CONNECTION_ERROR',
+          details: metaError.message || 'Unknown error',
+        });
+      }
+
       // Получить количество получателей для быстрого ответа
       const recipients = await db.campaignRecipients.findByStatus(id, 'pending');
       const totalRecipients = recipients.length;
 
+      if (totalRecipients === 0) {
+        return res.status(400).json({
+          error: true,
+          message: 'No recipients found for this campaign',
+          code: 'NO_RECIPIENTS',
+        });
+      }
+
       // Обновить статус кампании сразу
       await db.campaigns.update(id, {
-        status: 'running',
+        status: 'starting',
         started_at: new Date().toISOString(),
       });
 
