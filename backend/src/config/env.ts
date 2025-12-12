@@ -1,6 +1,13 @@
 import dotenv from 'dotenv';
+import path from 'path';
 
-dotenv.config();
+// Try to load .env from project root first, then fallback to backend/.env
+const rootEnvPath = path.resolve(__dirname, '../../.env');
+const backendEnvPath = path.resolve(__dirname, '../.env');
+
+// Load from root first, then backend (root takes precedence)
+dotenv.config({ path: rootEnvPath });
+dotenv.config({ path: backendEnvPath });
 
 const requiredEnvVars = [
   'SUPABASE_URL',
