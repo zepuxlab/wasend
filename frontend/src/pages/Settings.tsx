@@ -47,6 +47,26 @@ export default function Settings() {
       setStatus(data);
       setLastRefresh(new Date());
     } catch (error: any) {
+      // If request fails, backend API is definitely offline
+      setStatus({
+        backend_api: {
+          connected: false,
+          last_check: new Date().toISOString(),
+          error: error.message || 'Connection failed',
+        },
+        database: {
+          connected: false,
+        },
+        meta_api: {
+          connected: false,
+          last_check: new Date().toISOString(),
+          error: 'Cannot check - backend API is offline',
+        },
+        webhook: {
+          active: false,
+          last_received: null,
+        },
+      });
       toast({
         title: "Error",
         description: "Failed to fetch connection status",
