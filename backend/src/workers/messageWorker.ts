@@ -135,6 +135,20 @@ export const messageWorker = new Worker<MessageJobData>(
       // 9. Обновить счетчики кампании
       await db.campaigns.increment(campaignId, 'sent_count');
 
+      // 9.1. Проверить, завершена ли кампания (все сообщения отправлены или провалились)
+      const updatedCampaign = await db.campaigns.findById(campaignId);
+      if (updatedCampaign) {
+        const totalProcessed = (updatedCampaign.sent_count || 0) + (updatedCampaign.failed_count || 0);
+        if (totalProcessed >= updatedCampaign.total_recipients && updatedCampaign.status === 'running') {
+          // Все сообщения обработаны - завершить кампанию
+          await db.campaigns.update(campaignId, {
+            status: 'completed',
+            completed_at: new Date().toISOString(),
+          });
+          console.log(`Campaign ${campaignId} completed: ${updatedCampaign.sent_count} sent, ${updatedCampaign.failed_count} failed out of ${updatedCampaign.total_recipients} total`);
+        }
+      }
+
                   // 10. Записать в лог
                   await db.activityLogs.create({
                     campaign_id: campaignId,
