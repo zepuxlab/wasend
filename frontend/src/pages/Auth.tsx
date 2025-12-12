@@ -88,7 +88,7 @@ export default function Auth() {
             <div className="flex items-center justify-center gap-2 mb-2">
               <img 
                 src="https://office.ampriomilano.com/b2b/images/AM_logo_mini.svg" 
-                alt="amSendler Logo" 
+                alt="Relayne Logo" 
                 className="h-[48px] w-[48px]"
                 style={{ 
                   filter: 'brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)',
@@ -299,15 +299,11 @@ export default function Auth() {
         <div className="text-center mb-6 pt-4">
           <div className="flex items-center justify-center gap-2 mb-2">
             <img 
-              src="https://office.ampriomilano.com/b2b/images/AM_logo_mini.svg" 
-              alt="amSendler Logo" 
+              src="/relayne-logo.svg" 
+              alt="Relayne Logo" 
               className="h-[48px] w-[48px]"
-              style={{ 
-                filter: 'brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)',
-                WebkitFilter: 'brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)'
-              }}
             />
-            <h1 className="text-2xl font-bold">amSendler</h1>
+            <h1 className="text-2xl font-bold">Relayne</h1>
           </div>
           <p className="text-muted-foreground">Broadcast Panel</p>
         </div>

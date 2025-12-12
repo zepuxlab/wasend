@@ -59,16 +59,12 @@ export function AppSidebar() {
         {/* Logo */}
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
           <img 
-            src="https://office.ampriomilano.com/b2b/images/AM_logo_mini.svg" 
-            alt="amSendler Logo" 
+            src="/relayne-logo.svg" 
+            alt="Relayne Logo" 
             className="h-[38px] w-[38px]"
-            style={{ 
-              filter: 'brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)',
-              WebkitFilter: 'brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)'
-            }}
           />
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-foreground">amSendler</span>
+            <span className="text-sm font-semibold text-foreground">Relayne</span>
             <span className="text-xs text-sidebar-muted">Broadcast Panel</span>
           </div>
         </div>

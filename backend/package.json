@@ -1,7 +1,7 @@
 {
-  "name": "whatsapp-admin-backend",
+  "name": "relayne-backend",
   "version": "1.0.0",
-  "description": "Node.js Backend для WhatsApp Admin Panel",
+  "description": "Internal platform for centralized message delivery via WhatsApp",
   "main": "dist/index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
