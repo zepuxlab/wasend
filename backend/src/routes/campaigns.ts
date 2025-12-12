@@ -305,16 +305,15 @@ router.post(
       }
 
       // Проверить подключение к Meta API перед стартом
-      try {
-        const { metaApi } = await import('../services/metaApi');
-        await metaApi.getPhoneNumberInfo();
-      } catch (metaError: any) {
-        // Если нет подключения к Meta API, вернуть ошибку сразу
+      const { metaApi } = await import('../services/metaApi');
+      const metaHealth = await metaApi.getHealth();
+      if (!metaHealth.connected && process.env.META_API_TEST_MODE !== 'true') {
+        // Если нет подключения к Meta API и не в тестовом режиме, вернуть ошибку
         return res.status(503).json({
           error: true,
-          message: 'Meta API connection failed. Please check your API credentials.',
+          message: `Meta API connection failed: ${metaHealth.error || 'Unknown error'}`,
           code: 'META_API_CONNECTION_ERROR',
-          details: metaError.message || 'Unknown error',
+          details: metaHealth.error || 'Unknown error',
         });
       }
 
