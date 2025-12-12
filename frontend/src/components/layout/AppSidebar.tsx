@@ -59,7 +59,7 @@ export function AppSidebar() {
         {/* Logo */}
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
           <img 
-            src="/relayne-logo.svg" 
+            src="/wasend/relayne-logo.svg" 
             alt="Relayne Logo" 
             className="h-[38px] w-[38px]"
           />

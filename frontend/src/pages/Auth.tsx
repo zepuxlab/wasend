@@ -87,7 +87,7 @@ export default function Auth() {
           <div className="text-center mb-6 pt-4">
             <div className="flex items-center justify-center gap-2 mb-2">
               <img 
-                src="/relayne-logo.svg" 
+                src="/wasend/relayne-logo.svg" 
                 alt="Relayne Logo" 
                 className="h-[48px] w-[48px]"
               />
