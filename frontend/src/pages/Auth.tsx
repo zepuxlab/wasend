@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,16 +7,22 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "@/hooks/use-toast";
 import { useSupabase } from "@/hooks/useSupabase";
-import { Loader2, MessageSquare } from "lucide-react";
+import { Loader2, MessageSquare, Copy, Check } from "lucide-react";
 
 export default function Auth() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { supabase, isConfigured } = useSupabase();
   
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  // Check for Zoho OAuth code in URL
+  const zohoCode = searchParams.get('code');
+  const zohoError = searchParams.get('error');
 
   // Check if already logged in
   useEffect(() => {
@@ -36,6 +42,111 @@ export default function Auth() {
 
     return () => subscription.unsubscribe();
   }, [supabase, navigate]);
+
+  // Handle Zoho OAuth callback
+  if (zohoCode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-2xl p-6">
+          <div className="text-center mb-6 pt-4">
+            <div className="flex items-center justify-center gap-2 mb-2">
+              <img 
+                src="https://office.ampriomilano.com/b2b/images/AM_logo_mini.svg" 
+                alt="amSendler Logo" 
+                className="h-[48px] w-[48px]"
+                style={{ 
+                  filter: 'brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)',
+                  WebkitFilter: 'brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)'
+                }}
+              />
+              <h1 className="text-2xl font-bold">Zoho OAuth Authorization Code</h1>
+            </div>
+            <p className="text-muted-foreground">Copy this code to exchange it for Refresh Token</p>
+          </div>
+
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label>Authorization Code:</Label>
+              <div className="flex gap-2">
+                <Input
+                  value={zohoCode}
+                  readOnly
+                  className="font-mono text-sm"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(zohoCode);
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                >
+                  {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                </Button>
+              </div>
+            </div>
+
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="text-sm font-semibold mb-2">Next steps:</p>
+              <ol className="text-sm space-y-1 list-decimal list-inside text-muted-foreground">
+                <li>Copy the authorization code above</li>
+                <li>Use it in the curl command or Postman to exchange for Refresh Token</li>
+                <li>See ZOHO_SETUP.md for detailed instructions</li>
+              </ol>
+            </div>
+
+            <div className="bg-muted p-4 rounded-lg">
+              <p className="text-sm font-semibold mb-2">Example curl command:</p>
+              <pre className="text-xs bg-background p-3 rounded overflow-x-auto">
+{`curl -X POST "https://accounts.zoho.com/oauth/v2/token" \\
+  -d "grant_type=authorization_code" \\
+  -d "client_id=YOUR_CLIENT_ID" \\
+  -d "client_secret=YOUR_CLIENT_SECRET" \\
+  -d "redirect_uri=https://office.ampriomilano.com/wasend/auth" \\
+  -d "code=${zohoCode}"`}
+              </pre>
+            </div>
+
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                searchParams.delete('code');
+                navigate(`/wasend/auth?${searchParams.toString()}`, { replace: true });
+              }}
+            >
+              Back to Login
+            </Button>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  // Handle Zoho OAuth error
+  if (zohoError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <Card className="w-full max-w-md p-6">
+          <div className="text-center mb-6 pt-4">
+            <h1 className="text-2xl font-bold text-destructive mb-2">Zoho OAuth Error</h1>
+            <p className="text-muted-foreground">Error: {zohoError}</p>
+          </div>
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={() => {
+              searchParams.delete('error');
+              navigate(`/wasend/auth?${searchParams.toString()}`, { replace: true });
+            }}
+          >
+            Back to Login
+          </Button>
+        </Card>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
