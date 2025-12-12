@@ -127,19 +127,8 @@ router.post(
         ).toISOString(),
       });
 
-      // Синхронизировать с Zoho (асинхронно, не блокируем основной поток)
-      if (config.zoho.enabled) {
-        zohoService.syncMessage({
-          phone: contact.phone,
-          message: body.content,
-          direction: 'outbound',
-          timestamp: now,
-          contactName: contact.name,
-          chatId: id, // Добавляем chatId для создания ссылки
-        }).catch((error) => {
-          console.error('Zoho sync error (non-blocking):', error);
-        });
-      }
+      // Не синхронизируем исходящие сообщения с Zoho - они появляются автоматически через нативную интеграцию
+      // Синхронизируем только входящие сообщения (inbound) в webhook.ts
 
       res.status(201).json({ message: 'Message sent' });
     } catch (error: any) {

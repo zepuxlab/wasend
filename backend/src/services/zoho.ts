@@ -184,14 +184,18 @@ class ZohoService {
         lastName = nameParts.slice(1).join(' ') || '';
       }
 
+      // Если имя не передано, записываем номер дублем в имя
+      const finalLastName = lastName || normalizedPhone;
+      const finalFirstName = firstName || normalizedPhone;
+
       const response = await this.api.post(
         '/crm/v2/Leads',
         {
           data: [
             {
               Phone: normalizedPhone,
-              Last_Name: lastName || normalizedPhone,
-              First_Name: firstName,
+              Last_Name: finalLastName,
+              First_Name: finalFirstName,
               Lead_Source: 'WhatsApp',
             },
           ],
@@ -325,9 +329,12 @@ class ZohoService {
         noteContent += `\n✅ Status: ${message.messageStatus}`;
       }
 
-      // Добавляем ссылку на диалог в Zoho
-      const zohoChatUrl = this.getZohoChatUrl(leadId, message.phone);
-      noteContent += `\n\n💬 Open in Zoho: ${zohoChatUrl}`;
+      // Добавляем ссылку на наш диалог (используем chatId, а не номер телефона)
+      // В Zoho используется ID, а не номер, поэтому используем ссылку на наш диалог
+      if (message.chatId) {
+        const chatUrl = `${config.frontendUrl}/wasend/chats?chat=${message.chatId}`;
+        noteContent += `\n\n💬 [Open Chat in Admin Panel](${chatUrl})`;
+      }
 
       // Используем axios напрямую с полным URL
       // Zoho API для Notes требует правильный формат leadId
@@ -450,9 +457,15 @@ class ZohoService {
   /**
    * Синхронизация сообщения с Zoho
    * Находит или создает лида, добавляет сообщение в Notes
+   * Синхронизируем только входящие сообщения (inbound) - исходящие появляются автоматически через нативную интеграцию Zoho
    */
   async syncMessage(message: ZohoMessage): Promise<boolean> {
     if (!config.zoho.enabled) {
+      return false;
+    }
+
+    // Синхронизируем только входящие сообщения - исходящие появляются автоматически в Zoho
+    if (message.direction !== 'inbound') {
       return false;
     }
 

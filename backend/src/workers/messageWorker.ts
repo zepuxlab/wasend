@@ -109,23 +109,9 @@ export const messageWorker = new Worker<MessageJobData>(
                     },
                   });
 
-                  // 11. Синхронизировать с Zoho (асинхронно, не блокируем основной поток)
-                  // Это сообщение из рассылки - добавляем в Zoho для истории
-                  if (config.zoho.enabled) {
-                    zohoService.syncMessage({
-                      phone: contact.phone,
-                      message: template.preview_text || template.name,
-                      direction: 'outbound',
-                      timestamp: now,
-                      contactName: contact.name,
-                      isTemplate: true,
-                      templateName: template.name,
-                      messageStatus: 'sent',
-                      chatId: chat.id, // Добавляем chatId для создания ссылки на диалог
-                    }).catch((error) => {
-                      console.error('Zoho sync error (non-blocking):', error);
-                    });
-                  }
+                  // 11. Не синхронизируем исходящие сообщения из рассылок с Zoho
+                  // Они появляются автоматически через нативную интеграцию Zoho
+                  // Синхронизируем только входящие сообщения (inbound) в webhook.ts
 
                   return { success: true, messageId: response.messages?.[0]?.id };
     } catch (error: any) {
