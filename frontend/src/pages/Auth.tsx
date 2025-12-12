@@ -23,10 +23,45 @@ export default function Auth() {
   // Check for Zoho OAuth code in URL
   const zohoCode = searchParams.get('code');
   const zohoError = searchParams.get('error');
+  const [savedZohoCode, setSavedZohoCode] = useState<string | null>(null);
 
-  // Check if already logged in
+  // Save Zoho code immediately when page loads (before any redirects)
   useEffect(() => {
-    if (!supabase) return;
+    const code = searchParams.get('code');
+    if (code) {
+      // Save to localStorage immediately
+      localStorage.setItem('zoho_oauth_code', code);
+      localStorage.setItem('zoho_oauth_code_timestamp', Date.now().toString());
+      setSavedZohoCode(code);
+      
+      // Clean URL but keep code in state
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('code');
+      if (newSearchParams.toString()) {
+        navigate(`/wasend/auth?${newSearchParams.toString()}`, { replace: true });
+      } else {
+        navigate('/wasend/auth', { replace: true });
+      }
+    } else {
+      // Try to load from localStorage if not in URL
+      const savedCode = localStorage.getItem('zoho_oauth_code');
+      const savedTimestamp = localStorage.getItem('zoho_oauth_code_timestamp');
+      if (savedCode && savedTimestamp) {
+        const timestamp = parseInt(savedTimestamp, 10);
+        // Keep code for 10 minutes
+        if (Date.now() - timestamp < 10 * 60 * 1000) {
+          setSavedZohoCode(savedCode);
+        } else {
+          localStorage.removeItem('zoho_oauth_code');
+          localStorage.removeItem('zoho_oauth_code_timestamp');
+        }
+      }
+    }
+  }, []); // Run only once on mount
+
+  // Check if already logged in (but not if we have Zoho code)
+  useEffect(() => {
+    if (!supabase || savedZohoCode) return;
     
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
@@ -35,16 +70,17 @@ export default function Auth() {
     });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
+      if (session && !savedZohoCode) {
         navigate("/");
       }
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase, navigate]);
+  }, [supabase, navigate, savedZohoCode]);
 
-  // Handle Zoho OAuth callback
-  if (zohoCode) {
+  // Handle Zoho OAuth callback (use saved code if available)
+  const displayCode = savedZohoCode || zohoCode;
+  if (displayCode) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-2xl p-6">
@@ -69,7 +105,7 @@ export default function Auth() {
               <Label>Authorization Code:</Label>
               <div className="flex gap-2">
                 <Input
-                  value={zohoCode}
+                  value={displayCode}
                   readOnly
                   className="font-mono text-sm"
                 />
@@ -77,7 +113,7 @@ export default function Auth() {
                   variant="outline"
                   size="icon"
                   onClick={() => {
-                    navigator.clipboard.writeText(zohoCode);
+                    navigator.clipboard.writeText(displayCode);
                     setCopied(true);
                     setTimeout(() => setCopied(false), 2000);
                   }}
@@ -104,7 +140,7 @@ export default function Auth() {
   -d "client_id=YOUR_CLIENT_ID" \\
   -d "client_secret=YOUR_CLIENT_SECRET" \\
   -d "redirect_uri=https://office.ampriomilano.com/wasend/auth" \\
-  -d "code=${zohoCode}"`}
+  -d "code=${displayCode}"`}
               </pre>
             </div>
 
@@ -112,8 +148,10 @@ export default function Auth() {
               variant="outline"
               className="w-full"
               onClick={() => {
-                searchParams.delete('code');
-                navigate(`/wasend/auth?${searchParams.toString()}`, { replace: true });
+                localStorage.removeItem('zoho_oauth_code');
+                localStorage.removeItem('zoho_oauth_code_timestamp');
+                setSavedZohoCode(null);
+                navigate('/wasend/auth', { replace: true });
               }}
             >
               Back to Login
