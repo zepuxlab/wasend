@@ -223,6 +223,18 @@ export const contactsBackendApi = {
    */
   delete: (id: string) =>
     apiRequest<void>(`/contacts/${id}`, { method: 'DELETE' }),
+
+  /**
+   * GET /api/contacts/:id/history
+   * Get contact history (messages, campaigns, logs)
+   */
+  getHistory: (id: string) =>
+    apiRequest<{
+      messages: any[];
+      campaigns: any[];
+      logs: any[];
+      chats: any[];
+    }>(`/contacts/${id}/history`),
 };
 
 // ============================================

@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { ContactHistoryDialog } from "@/components/ContactHistoryDialog";
 import { TopBar } from "@/components/layout/TopBar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -558,7 +559,19 @@ export default function Contacts() {
                           {!isUser && (
                             <>
                               <DropdownMenuItem>Edit</DropdownMenuItem>
-                              <DropdownMenuItem>View History</DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedContactForHistory({
+                                    id: contact.id,
+                                    name: contact.name || null,
+                                    phone: contact.phone,
+                                  });
+                                  setHistoryDialogOpen(true);
+                                }}
+                              >
+                                <FileText className="mr-2 h-4 w-4" />
+                                View History
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 className="text-destructive"
                                 onClick={() => handleDelete(contact.id)}

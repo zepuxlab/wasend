@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { db } from '../services/supabase';
+import { db, dbSupabase } from '../services/supabase';
 import { z } from 'zod';
 
 const router = Router();
@@ -142,6 +142,53 @@ router.delete(
       const { id } = req.params;
       await db.contacts.delete(id);
       res.status(204).send();
+    } catch (error: any) {
+      return next(error);
+    }
+  }
+);
+
+// GET /api/contacts/:id/history - Получить историю контакта
+router.get(
+  '/:id/history',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { id } = req.params;
+
+      // Получить чаты контакта
+      const chats = await db.chats.findAll();
+      const contactChats = chats.filter((chat: any) => chat.contact_id === id);
+
+      // Получить все сообщения из чатов контакта
+      const allMessages: any[] = [];
+      for (const chat of contactChats) {
+        const messages = await db.messages.findByChatId(chat.id);
+        allMessages.push(...messages.map((msg: any) => ({ ...msg, chat })));
+      }
+
+      // Получить кампании, в которых участвовал контакт
+      const { data: recipients } = await dbSupabase
+        .from('campaign_recipients')
+        .select('*, campaign:campaigns(*)')
+        .eq('contact_id', id)
+        .order('created_at', { ascending: false });
+
+      // Получить логи активности для контакта
+      const { data: logs } = await dbSupabase
+        .from('activity_logs')
+        .select('*, campaign:campaigns(name)')
+        .eq('contact_id', id)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      res.json({
+        messages: allMessages.sort((a, b) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        ),
+        campaigns: recipients || [],
+        logs: logs || [],
+        chats: contactChats,
+      });
     } catch (error: any) {
       return next(error);
     }
