@@ -253,8 +253,9 @@ class ZohoService {
       }
 
       // Создаем Activity (сообщение)
-      const response = await this.api.post(
-        '/crm/v2/Activities',
+      // Zoho CRM API требует POST с data в формате массива объектов
+      const response = await axios.post(
+        `${config.zoho.apiDomain}/crm/v2/Activities`,
         {
           data: [activityData],
         },
