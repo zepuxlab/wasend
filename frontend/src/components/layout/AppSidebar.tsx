@@ -29,7 +29,7 @@ const navigation = [
 export function AppSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, userRole, isLoading, isAdmin, signOut } = useAuth();
+  const { user, userRole, isLoading, isAdmin, isUser, signOut } = useAuth();
 
   const handleSignOut = async () => {
     await signOut();
@@ -44,6 +44,11 @@ export function AppSidebar() {
       default: return '';
     }
   };
+
+  // Для роли user показываем только Dashboard и Chats
+  const filteredNavigation = isUser 
+    ? navigation.filter(item => item.href === '/' || item.href === '/chats')
+    : navigation;
 
   const getRoleVariant = (role: string | null): "destructive" | "default" | "secondary" => {
     switch (role) {
@@ -71,7 +76,7 @@ export function AppSidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 px-3 py-4">
-          {navigation.map((item) => {
+          {filteredNavigation.map((item) => {
             const isActive = location.pathname === item.href || 
               (item.href !== "/" && location.pathname.startsWith(item.href));
             return (
