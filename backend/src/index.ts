@@ -25,6 +25,9 @@ import './workers/messageWorker';
 
 const app = express();
 
+// Trust proxy (needed for rate limiter behind Nginx)
+app.set('trust proxy', true);
+
 // Middleware
 app.use(helmet());
 app.use(corsMiddleware);

@@ -19,7 +19,7 @@ INSERT INTO templates (
   'test_template',
   'UTILITY',
   'ru',
-  'approved',
+  'approved'::template_status,
   '[
     {
       "type": "BODY",
@@ -66,15 +66,13 @@ INSERT INTO chats (
   contact_id,
   status,
   last_message_at,
-  reply_window_expires_at,
   created_at,
   updated_at
 )
 SELECT 
   id,
-  'open',
+  'open'::chat_status,
   NOW(),
-  NOW() + INTERVAL '24 hours',
   NOW(),
   NOW()
 FROM contact_data
@@ -99,30 +97,30 @@ INSERT INTO messages (
 )
 SELECT 
   id,
-  'outbound',
+  'outbound'::message_direction,
   'Привет! Это тестовое сообщение от кампании "Тестовая Кампания".',
-  'template',
-  'sent',
+  'template'::message_type,
+  'sent'::message_status,
   NOW() - INTERVAL '2 hours'
 FROM chat_data
 WHERE EXISTS (SELECT 1 FROM chat_data)
 UNION ALL
 SELECT 
   id,
-  'inbound',
+  'inbound'::message_direction,
   'Спасибо за сообщение! Всё работает отлично.',
-  'text',
-  'read',
+  'text'::message_type,
+  'read'::message_status,
   NOW() - INTERVAL '1 hour'
 FROM chat_data
 WHERE EXISTS (SELECT 1 FROM chat_data)
 UNION ALL
 SELECT 
   id,
-  'outbound',
+  'outbound'::message_direction,
   'Рады, что вам понравилось! Если будут вопросы, пишите.',
-  'text',
-  'sent',
+  'text'::message_type,
+  'sent'::message_status,
   NOW() - INTERVAL '30 minutes'
 FROM chat_data
 WHERE EXISTS (SELECT 1 FROM chat_data);
@@ -155,7 +153,7 @@ SELECT
   'Тестовая Кампания',
   'Это тестовая кампания для проверки работы системы',
   id,
-  'completed',
+  'completed'::campaign_status,
   '{"{{1}}": "name", "{{2}}": "phone"}'::jsonb,
   25,
   90,
@@ -196,7 +194,7 @@ INSERT INTO campaign_recipients (
 SELECT 
   c.id,
   co.id,
-  'read',
+  'read'::message_status,
   '{"{{1}}": "Тестовый Контакт", "{{2}}": "+79991234567"}'::jsonb,
   'wamid.test123456789',
   NOW() - INTERVAL '2 hours',

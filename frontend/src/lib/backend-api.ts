@@ -37,21 +37,45 @@ async function apiRequest<T>(
   const baseUrl = getBaseUrl();
   const token = getAuthToken();
 
-  const response = await fetch(`${baseUrl}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...(token && { Authorization: `Bearer ${token}` }),
-      ...options.headers,
-    },
-  });
+  // Create abort controller for timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
 
-  if (!response.ok) {
-    const error = await response.json().catch(() => ({ message: 'Request failed' }));
-    throw new Error(error.message || `API Error: ${response.status}`);
+  try {
+    const response = await fetch(`${baseUrl}${endpoint}`, {
+      ...options,
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token && { Authorization: `Bearer ${token}` }),
+        ...options.headers,
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ 
+        message: `Request failed with status ${response.status}` 
+      }));
+      throw new Error(error.message || `API Error: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error: any) {
+    clearTimeout(timeoutId); // Ensure timeout is cleared on error
+    
+    // Handle network errors
+    if (error.name === 'TypeError' && (error.message.includes('fetch') || error.message.includes('Failed to fetch'))) {
+      throw new Error('Failed to connect to backend server. Please check if the server is running.');
+    }
+    // Handle timeout/abort
+    if (error.name === 'AbortError' || error.name === 'TimeoutError') {
+      throw new Error('Request timeout. The server is taking too long to respond.');
+    }
+    // Re-throw other errors
+    throw error;
   }
-
-  return response.json();
 }
 
 // ============================================

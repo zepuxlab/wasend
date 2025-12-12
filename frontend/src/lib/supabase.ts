@@ -45,29 +45,40 @@ export async function initSupabase(): Promise<boolean> {
   
   if (!configPromise) {
     configPromise = (async () => {
-      const config = await fetchConfig();
-      if (config && config.url && config.anonKey) {
-        supabaseConfig = config;
-        // Get the correct redirect URL based on environment
-        const getRedirectUrl = () => {
-          if (import.meta.env.PROD) {
-            return `${window.location.origin}/wasend/auth`;
-          }
-          return `${window.location.origin}/auth`;
-        };
+      try {
+        const config = await fetchConfig();
+        if (config && config.url && config.anonKey) {
+          supabaseConfig = config;
+          // Get the correct redirect URL based on environment
+          const getRedirectUrl = () => {
+            if (import.meta.env.PROD) {
+              return `${window.location.origin}/wasend/auth`;
+            }
+            return `${window.location.origin}/auth`;
+          };
 
-        supabaseClient = createClient(config.url, config.anonKey, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            redirectTo: getRedirectUrl(),
-          },
-        });
+          supabaseClient = createClient(config.url, config.anonKey, {
+            auth: {
+              persistSession: true,
+              autoRefreshToken: true,
+              redirectTo: getRedirectUrl(),
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Failed to initialize Supabase:', error);
+        // Don't throw - allow app to continue, backend might be temporarily unavailable
       }
     })();
   }
   
-  await configPromise;
+  try {
+    await configPromise;
+  } catch (error) {
+    console.error('Error waiting for Supabase config:', error);
+    // Return false but don't block the app
+  }
+  
   return supabaseConfig !== null;
 }
 

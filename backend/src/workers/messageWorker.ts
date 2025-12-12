@@ -48,7 +48,7 @@ export const messageWorker = new Worker<MessageJobData>(
         throw new Error('Contact has not opted in - message not sent');
       }
 
-      // 5. Отправить через Meta API
+      // 5. Отправить шаблон через Meta API (MARKETING шаблоны всегда платные)
       const response = await metaApi.sendTemplateMessage({
         to: contact.phone,
         template: template.name,
@@ -56,22 +56,60 @@ export const messageWorker = new Worker<MessageJobData>(
         components,
       });
 
-      // 6. Обновить статус получателя
+      // 6. Обновить или создать чат и продлить окно ответа (для будущих бесплатных текстовых сообщений)
+      const now = new Date();
+      let chat = await db.chats.findByContactId(contact.id);
+      if (!chat) {
+        chat = await db.chats.create({
+          contact_id: contact.id,
+          status: 'open',
+          last_message_at: now.toISOString(),
+          reply_window_expires_at: new Date(
+            now.getTime() + 24 * 60 * 60 * 1000
+          ).toISOString(),
+        });
+      } else {
+        await db.chats.update(chat.id, {
+          last_message_at: now.toISOString(),
+          reply_window_expires_at: new Date(
+            now.getTime() + 24 * 60 * 60 * 1000
+          ).toISOString(),
+          status: 'open',
+        });
+      }
+
+      // 7. Сохранить сообщение в чат
+      await db.messages.create({
+        chat_id: chat.id,
+        direction: 'outbound',
+        message_type: 'template',
+        content: template.name,
+        whatsapp_message_id: response.messages?.[0]?.id,
+        template_name: template.name,
+        status: 'sent',
+        created_at: now.toISOString(),
+      });
+
+      // 8. Обновить статус получателя
       await db.campaignRecipients.update(recipientId, {
         status: 'sent',
         whatsapp_message_id: response.messages?.[0]?.id,
-        sent_at: new Date().toISOString(),
+        sent_at: now.toISOString(),
       });
 
-      // 7. Обновить счетчики кампании
+      // 9. Обновить счетчики кампании
       await db.campaigns.increment(campaignId, 'sent_count');
 
-      // 8. Записать в лог
+      // 10. Записать в лог
       await db.activityLogs.create({
         campaign_id: campaignId,
         contact_id: contact.id,
         action: 'message_sent',
         phone: contact.phone,
+        details: {
+          message_type: 'template',
+          template_category: template.category,
+        },
       });
 
       return { success: true, messageId: response.messages?.[0]?.id };

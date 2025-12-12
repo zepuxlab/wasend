@@ -96,7 +96,7 @@ async function handleIncomingMessage(message: MetaWebhookMessage) {
     const savedMessage = await db.messages.create({
       chat_id: chat.id,
       direction: 'inbound',
-      type: message.type as any,
+      message_type: message.type as any,
       content,
       whatsapp_message_id: message.id,
       created_at: timestamp.toISOString(),

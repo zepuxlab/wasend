@@ -90,14 +90,19 @@ router.post(
       await db.messages.create({
         chat_id: id,
         direction: 'outbound',
-        type: 'text',
+        message_type: 'text',
         content: body.content,
         whatsapp_message_id: response.messages?.[0]?.id,
+        status: 'sent',
       });
 
-      // Обновить чат
+      // Обновить чат и продлить окно ответа на 24 часа
+      const now = new Date();
       await db.chats.update(id, {
-        last_message_at: new Date().toISOString(),
+        last_message_at: now.toISOString(),
+        reply_window_expires_at: new Date(
+          now.getTime() + 24 * 60 * 60 * 1000
+        ).toISOString(),
       });
 
       res.status(201).json({ message: 'Message sent' });

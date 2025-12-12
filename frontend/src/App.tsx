@@ -27,18 +27,43 @@ function AppContent() {
   const [initError, setInitError] = useState<string | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
+    
+    // Add timeout for initialization
+    const timeout = setTimeout(() => {
+      if (isMounted) {
+        setIsInitializing(false);
+        setInitError("Backend server is taking too long to respond. The app will continue but some features may not work.");
+      }
+    }, 10000); // 10 second timeout
+
     initSupabase()
       .then((success) => {
+        if (!isMounted) return;
+        clearTimeout(timeout);
         if (!success) {
-          setInitError("Failed to connect to backend. Please check settings.");
+          // Don't block the app - just show a warning
+          console.warn('Supabase not configured, but allowing app to continue');
+          setInitError(null); // Don't block on init failure
         }
       })
       .catch((err) => {
-        setInitError(err.message || "Initialization error");
+        if (!isMounted) return;
+        clearTimeout(timeout);
+        console.error('Init error:', err);
+        // Don't block the app on initialization errors
+        setInitError(null);
       })
       .finally(() => {
-        setIsInitializing(false);
+        if (isMounted) {
+          setIsInitializing(false);
+        }
       });
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timeout);
+    };
   }, []);
 
   if (isInitializing) {

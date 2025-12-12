@@ -45,6 +45,11 @@ export default function Logs() {
       limit: 200,
     }),
     refetchInterval: 5000, // Poll every 5 seconds
+    retry: 3, // Retry 3 times on failure
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    refetchOnWindowFocus: false, // Don't refetch on window focus to reduce load
+    // Continue polling even if there's an error (backend might be temporarily unavailable)
+    refetchIntervalInBackground: true,
   });
 
   // Fetch campaigns for filter
@@ -164,14 +169,24 @@ export default function Logs() {
           </Card>
         )}
 
-        {/* Error State */}
+        {/* Error State - Show warning but don't block the view */}
         {error && (
-          <Card className="p-6">
-            <EmptyState
-              icon={Activity}
-              title="Failed to load logs"
-              description={(error as Error).message}
-            />
+          <Card className="p-4 mb-4 border-yellow-500/50 bg-yellow-500/10">
+            <div className="flex items-center gap-2">
+              <Activity className="h-4 w-4 text-yellow-600" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  Unable to load logs
+                </p>
+                <p className="text-xs text-yellow-700 dark:text-yellow-300 mt-1">
+                  {(error as Error).message || 'Backend server may be temporarily unavailable'}
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={() => refetch()}>
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Retry
+              </Button>
+            </div>
           </Card>
         )}
 
