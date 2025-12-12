@@ -20,7 +20,20 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const status = req.query.status as string | undefined;
     const chats = await db.chats.findAll({ status });
-    res.json(chats);
+    
+    // Добавить can_reply для каждого чата
+    const now = new Date();
+    const chatsWithCanReply = chats.map((chat: any) => {
+      const canReply = chat.reply_window_expires_at 
+        ? new Date(chat.reply_window_expires_at) > now
+        : false;
+      return {
+        ...chat,
+        can_reply: canReply,
+      };
+    });
+    
+    res.json(chatsWithCanReply);
   } catch (error: any) {
     return next(error);
   }
@@ -51,7 +64,16 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
       }
     }
     
-    res.json(chat);
+    // Вычислить can_reply на основе reply_window_expires_at
+    const now = new Date();
+    const canReply = chat.reply_window_expires_at 
+      ? new Date(chat.reply_window_expires_at) > now
+      : false;
+    
+    res.json({
+      ...chat,
+      can_reply: canReply,
+    });
   } catch (error: any) {
     if (error.code === 'PGRST116') {
       return res.status(404).json({
