@@ -77,8 +77,32 @@ export default function Settings() {
     }
   };
 
+  // Load campaign settings from backend
+  const fetchCampaignSettings = async () => {
+    try {
+      const data = await settingsBackendApi.getAll();
+      if (data.campaign_settings) {
+        setCampaignSettings({
+          defaultBatchSize: data.campaign_settings.defaultBatchSize || 50,
+          defaultDelaySeconds: data.campaign_settings.defaultDelaySeconds || 60,
+          defaultHourlyCap: data.campaign_settings.defaultHourlyCap || 1000,
+          defaultDailyCap: data.campaign_settings.defaultDailyCap || 10000,
+          utmSource: data.campaign_settings.utmSource || 'whatsapp',
+          utmMedium: data.campaign_settings.utmMedium || 'broadcast',
+          dailyLimitWarning: data.campaign_settings.dailyLimitWarning !== undefined ? data.campaign_settings.dailyLimitWarning : true,
+          dailyLimitAmount: data.campaign_settings.dailyLimitAmount || 100,
+          pauseOnLimit: data.campaign_settings.pauseOnLimit !== undefined ? data.campaign_settings.pauseOnLimit : false,
+        });
+      }
+    } catch (error: any) {
+      console.warn('Failed to load campaign settings:', error);
+      // Keep default values
+    }
+  };
+
   useEffect(() => {
     fetchStatus();
+    fetchCampaignSettings();
     // Auto-refresh every 30 seconds
     const interval = setInterval(fetchStatus, 30000);
     return () => clearInterval(interval);
@@ -484,12 +508,22 @@ export default function Settings() {
 
             <div className="flex justify-end">
               <Button
-                onClick={() => {
-                  // TODO: Save to backend
-                  toast({
-                    title: "Settings Saved",
-                    description: "Campaign settings have been updated",
-                  });
+                onClick={async () => {
+                  try {
+                    await settingsBackendApi.update({
+                      campaign_settings: campaignSettings,
+                    });
+                    toast({
+                      title: "Settings Saved",
+                      description: "Campaign settings have been saved to database",
+                    });
+                  } catch (error: any) {
+                    toast({
+                      title: "Error",
+                      description: error.message || "Failed to save campaign settings",
+                      variant: "destructive",
+                    });
+                  }
                 }}
               >
                 Save Settings

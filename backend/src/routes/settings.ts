@@ -64,12 +64,32 @@ router.get(
 // GET /api/settings - Получить настройки
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Здесь можно добавить логику получения настроек из БД
+    // Получить настройки кампаний из БД
+    const campaignSettingsValue = await db.settings.get('campaign_settings');
+    
+    let campaignSettings = {
+      defaultBatchSize: 50,
+      defaultDelaySeconds: 60,
+      defaultHourlyCap: 1000,
+      defaultDailyCap: 10000,
+      utmSource: 'whatsapp',
+      utmMedium: 'broadcast',
+      dailyLimitWarning: true,
+      dailyLimitAmount: 100,
+      pauseOnLimit: false,
+    };
+
+    if (campaignSettingsValue) {
+      try {
+        const parsed = JSON.parse(campaignSettingsValue);
+        campaignSettings = { ...campaignSettings, ...parsed };
+      } catch (e) {
+        console.warn('Failed to parse campaign_settings from DB:', e);
+      }
+    }
+
     res.json({
-      rate_limits: {
-        default_batch: 50,
-        default_delay_minutes: 1,
-      },
+      campaign_settings: campaignSettings,
     });
   } catch (error: any) {
     return next(error);
@@ -79,8 +99,14 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
 // PATCH /api/settings - Обновить настройки
 router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
-    // Здесь можно добавить логику сохранения настроек в БД
-    res.json({ message: 'Settings updated' });
+    const { campaign_settings } = req.body;
+
+    if (campaign_settings) {
+      // Сохранить настройки кампаний в БД
+      await db.settings.set('campaign_settings', JSON.stringify(campaign_settings));
+    }
+
+    res.json({ message: 'Settings updated', campaign_settings });
   } catch (error: any) {
     return next(error);
   }

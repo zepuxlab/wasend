@@ -357,14 +357,14 @@ export const settingsBackendApi = {
    * GET /api/settings
    * Get all settings
    */
-  getAll: () => apiRequest<Record<string, string>>('/settings'),
+  getAll: () => apiRequest<{ campaign_settings?: CampaignSettings }>('/settings'),
 
   /**
    * PATCH /api/settings
    * Update settings
    */
-  update: (data: Record<string, string>) =>
-    apiRequest<Record<string, string>>('/settings', {
+  update: (data: { campaign_settings?: CampaignSettings }) =>
+    apiRequest<{ message: string; campaign_settings?: CampaignSettings }>('/settings', {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
@@ -536,6 +536,18 @@ export interface PublicConfig {
   supabase_anon_key: string;
   meta_phone_number_id?: string;
   meta_business_name?: string;
+}
+
+export interface CampaignSettings {
+  defaultBatchSize: number;
+  defaultDelaySeconds: number;
+  defaultHourlyCap: number;
+  defaultDailyCap: number;
+  utmSource: string;
+  utmMedium: string;
+  dailyLimitWarning: boolean;
+  dailyLimitAmount: number;
+  pauseOnLimit: boolean;
 }
 
 export interface ConnectionStatus {

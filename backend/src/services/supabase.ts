@@ -405,5 +405,32 @@ export const db = {
       return data;
     },
   },
+  settings: {
+    get: async (key: string) => {
+      const { data, error } = await supabase
+        .from('settings')
+        .select('value')
+        .eq('key', key)
+        .single();
+      if (error && error.code !== 'PGRST116') throw error;
+      return data?.value || null;
+    },
+    set: async (key: string, value: string) => {
+      const { data, error } = await supabase
+        .from('settings')
+        .upsert(
+          {
+            key,
+            value,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'key' }
+        )
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  },
 };
 
