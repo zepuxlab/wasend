@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useCampaignsFromBackend, useDeleteCampaignBackend } from "@/hooks/useBackendCampaigns";
 import { useSupabase } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import {
   AlertDialog,
@@ -38,6 +39,7 @@ import { useState } from "react";
 export default function Broadcasts() {
   const navigate = useNavigate();
   const { isConfigured } = useSupabase();
+  const { isUser } = useAuth();
   const { data: campaigns, isLoading, error } = useCampaignsFromBackend();
   const deleteCampaign = useDeleteCampaignBackend();
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -108,10 +110,12 @@ export default function Broadcasts() {
               {campaigns?.length || 0} campaigns
             </span>
           </div>
-          <Button onClick={() => navigate("/broadcasts/create")}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Broadcast
-          </Button>
+          {!isUser && (
+            <Button onClick={() => navigate("/broadcasts/create")}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Broadcast
+            </Button>
+          )}
         </div>
 
         {/* Loading State */}
@@ -198,13 +202,15 @@ export default function Broadcasts() {
                             <Eye className="mr-2 h-4 w-4" />
                             View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => setDeleteId(campaign.id)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
+                          {!isUser && (
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => setDeleteId(campaign.id)}
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete
+                            </DropdownMenuItem>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

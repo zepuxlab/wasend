@@ -25,11 +25,13 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { useTemplates, useSyncTemplates } from "@/hooks/useTemplates";
 import { useSupabase } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 
 export default function Templates() {
   const navigate = useNavigate();
   const { isConfigured } = useSupabase();
+  const { isUser } = useAuth();
   const { data: templates, isLoading, error } = useTemplates();
   const syncTemplates = useSyncTemplates();
   
@@ -97,13 +99,15 @@ export default function Templates() {
                 Templates are loaded from your WhatsApp Business account
               </p>
             </div>
-            <Button
-              onClick={() => syncTemplates.mutate()}
-              disabled={syncTemplates.isPending}
-            >
-              <RefreshCw className={`mr-2 h-4 w-4 ${syncTemplates.isPending ? "animate-spin" : ""}`} />
-              {syncTemplates.isPending ? "Syncing..." : "Sync"}
-            </Button>
+            {!isUser && (
+              <Button
+                onClick={() => syncTemplates.mutate()}
+                disabled={syncTemplates.isPending}
+              >
+                <RefreshCw className={`mr-2 h-4 w-4 ${syncTemplates.isPending ? "animate-spin" : ""}`} />
+                {syncTemplates.isPending ? "Syncing..." : "Sync"}
+              </Button>
+            )}
           </div>
         </Card>
 

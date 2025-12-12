@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useContacts, useCreateContact, useDeleteContact, useBulkCreateContacts } from "@/hooks/useContacts";
 import { useSupabase } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
@@ -48,6 +49,7 @@ const CSV_EXAMPLE = `phone,name,country,tags,opt_in
 export default function Contacts() {
   const navigate = useNavigate();
   const { isConfigured } = useSupabase();
+  const { isUser } = useAuth();
   const { data: contacts, isLoading, error } = useContacts();
   const createContact = useCreateContact();
   const deleteContact = useDeleteContact();
@@ -280,33 +282,34 @@ export default function Contacts() {
               onChange={(e) => setSearchQuery(e.target.value)}
             />
           </div>
-          <div className="flex gap-2">
-            <input
-              type="file"
-              accept=".csv"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              className="hidden"
-            />
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="mr-2 h-4 w-4" />
-              Import CSV
-            </Button>
-            <Button variant="outline" onClick={exportContacts}>
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
-            <Button variant="ghost" size="sm" onClick={downloadCSVExample}>
-              <FileText className="mr-2 h-4 w-4" />
-              CSV Example
-            </Button>
-            <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Contact
-                </Button>
-              </DialogTrigger>
+          {!isUser && (
+            <div className="flex gap-2">
+              <input
+                type="file"
+                accept=".csv"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="mr-2 h-4 w-4" />
+                Import CSV
+              </Button>
+              <Button variant="outline" onClick={exportContacts}>
+                <Download className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+              <Button variant="ghost" size="sm" onClick={downloadCSVExample}>
+                <FileText className="mr-2 h-4 w-4" />
+                CSV Example
+              </Button>
+              <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Add Contact
+                  </Button>
+                </DialogTrigger>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add Contact</DialogTitle>
@@ -357,8 +360,10 @@ export default function Contacts() {
                 </div>
               </DialogContent>
             </Dialog>
+          )}
 
             {/* Import CSV Dialog */}
+            {!isUser && (
             <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
               <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
@@ -549,15 +554,19 @@ export default function Contacts() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>Edit</DropdownMenuItem>
-                          <DropdownMenuItem>View History</DropdownMenuItem>
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => handleDelete(contact.id)}
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
-                          </DropdownMenuItem>
+                          {!isUser && (
+                            <>
+                              <DropdownMenuItem>Edit</DropdownMenuItem>
+                              <DropdownMenuItem>View History</DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="text-destructive"
+                                onClick={() => handleDelete(contact.id)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete
+                              </DropdownMenuItem>
+                            </>
+                          )}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

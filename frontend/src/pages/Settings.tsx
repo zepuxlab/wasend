@@ -19,8 +19,10 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { settingsBackendApi, ConnectionStatus } from "@/lib/backend-api";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Settings() {
+  const { isUser } = useAuth();
   const [status, setStatus] = useState<ConnectionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
@@ -269,7 +271,9 @@ export default function Settings() {
         <Tabs defaultValue="status" className="space-y-6">
           <TabsList>
             <TabsTrigger value="status">Connection Status</TabsTrigger>
-            <TabsTrigger value="campaigns">Campaign Settings</TabsTrigger>
+            {!isUser && (
+              <TabsTrigger value="campaigns">Campaign Settings</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="status">

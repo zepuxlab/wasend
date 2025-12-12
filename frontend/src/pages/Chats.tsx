@@ -17,6 +17,7 @@ import {
   useResolveChatFromBackend,
 } from "@/hooks/useBackendChats";
 import { useSupabase } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
 import { format, formatDistanceToNow, isAfter } from "date-fns";
 import type { Chat, Message } from "@/lib/backend-api";
 import {
@@ -31,6 +32,7 @@ import { Label } from "@/components/ui/label";
 export default function Chats() {
   const navigate = useNavigate();
   const { isConfigured } = useSupabase();
+  const { isUser } = useAuth();
   
   const { data: chats, isLoading: chatsLoading, error: chatsError, refetch } = useChatsFromBackend();
   const sendMessage = useSendMessageToBackend();
@@ -225,13 +227,14 @@ export default function Chats() {
                   {selectedChat.tags?.map((tag: string) => (
                     <Badge key={tag} variant="outline">{tag}</Badge>
                   ))}
-                  <Dialog open={tagDialogOpen} onOpenChange={setTagDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Tag className="mr-2 h-4 w-4" />
-                        Tag
-                      </Button>
-                    </DialogTrigger>
+                  {!isUser && (
+                    <Dialog open={tagDialogOpen} onOpenChange={setTagDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Tag className="mr-2 h-4 w-4" />
+                          Tag
+                        </Button>
+                      </DialogTrigger>
                     <DialogContent>
                       <DialogHeader>
                         <DialogTitle>Add Tag</DialogTitle>
@@ -258,7 +261,8 @@ export default function Chats() {
                       </div>
                     </DialogContent>
                   </Dialog>
-                  {selectedChat.status === "open" && (
+                  )}
+                  {!isUser && selectedChat.status === "open" && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -333,47 +337,49 @@ export default function Chats() {
               </ScrollArea>
 
               {/* Reply Input */}
-              <div className="border-t border-border bg-card p-4">
-                {canReply ? (
-                  <>
-                    <div className="mx-auto flex max-w-2xl gap-3">
-                      <Input
-                        placeholder="Type a message..."
-                        value={reply}
-                        onChange={(e) => setReply(e.target.value)}
-                        onKeyPress={handleKeyPress}
-                        className="flex-1"
-                        disabled={sendMessage.isPending}
-                      />
-                      <Button
-                        onClick={handleSendMessage}
-                        disabled={!reply.trim() || sendMessage.isPending}
-                      >
-                        {sendMessage.isPending ? (
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                        ) : (
-                          <Send className="h-4 w-4" />
-                        )}
+              {!isUser && (
+                <div className="border-t border-border bg-card p-4">
+                  {canReply ? (
+                    <>
+                      <div className="mx-auto flex max-w-2xl gap-3">
+                        <Input
+                          placeholder="Type a message..."
+                          value={reply}
+                          onChange={(e) => setReply(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                          className="flex-1"
+                          disabled={sendMessage.isPending}
+                        />
+                        <Button
+                          onClick={handleSendMessage}
+                          disabled={!reply.trim() || sendMessage.isPending}
+                        >
+                          {sendMessage.isPending ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {replyWindowExpires && (
+                        <p className="mx-auto mt-2 max-w-2xl text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          Reply window expires {formatDistanceToNow(new Date(replyWindowExpires), { addSuffix: true })}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="mx-auto max-w-2xl text-center">
+                      <p className="text-sm text-muted-foreground">
+                        ⚠️ 24-hour reply window expired — Use a template to re-engage
+                      </p>
+                      <Button variant="outline" size="sm" className="mt-2">
+                        Send Template
                       </Button>
                     </div>
-                    {replyWindowExpires && (
-                      <p className="mx-auto mt-2 max-w-2xl text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        Reply window expires {formatDistanceToNow(new Date(replyWindowExpires), { addSuffix: true })}
-                      </p>
-                    )}
-                  </>
-                ) : (
-                  <div className="mx-auto max-w-2xl text-center">
-                    <p className="text-sm text-muted-foreground">
-                      ⚠️ 24-hour reply window expired — Use a template to re-engage
-                    </p>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      Send Template
-                    </Button>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </>
           )}
         </div>

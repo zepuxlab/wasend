@@ -45,12 +45,14 @@ import {
 } from "@/hooks/useBackendCampaigns";
 import { format } from "date-fns";
 import { useSupabase } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
 import { EmptyState } from "@/components/ui/empty-state";
 
 export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { isConfigured } = useSupabase();
+  const { isUser } = useAuth();
   const { data: campaign, isLoading, error } = useCampaignFromBackend(id || "");
   const { data: recipients } = useCampaignRecipientsFromBackend(id || "");
   const { start, pause, resume, stop, isLoading: isControlLoading } = useCampaignControlsBackend(id || "");
@@ -158,41 +160,42 @@ export default function CampaignDetail() {
             Back to Broadcasts
           </Button>
 
-          <div className="flex items-center gap-2">
-            {canStart && (
-              <Button onClick={handleStart} disabled={isControlLoading}>
-                {isControlLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Play className="mr-2 h-4 w-4" />
-                )}
-                Start Campaign
-              </Button>
-            )}
+          {!isUser && (
+            <div className="flex items-center gap-2">
+              {canStart && (
+                <Button onClick={handleStart} disabled={isControlLoading}>
+                  {isControlLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Play className="mr-2 h-4 w-4" />
+                  )}
+                  Start Campaign
+                </Button>
+              )}
 
-            {canPause && (
-              <Button variant="outline" onClick={handlePause} disabled={isControlLoading}>
-                {isControlLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Pause className="mr-2 h-4 w-4" />
-                )}
-                Pause
-              </Button>
-            )}
+              {canPause && (
+                <Button variant="outline" onClick={handlePause} disabled={isControlLoading}>
+                  {isControlLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Pause className="mr-2 h-4 w-4" />
+                  )}
+                  Pause
+                </Button>
+              )}
 
-            {canResume && (
-              <Button onClick={handleResume} disabled={isControlLoading}>
-                {isControlLoading ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                ) : (
-                  <Play className="mr-2 h-4 w-4" />
-                )}
-                Resume
-              </Button>
-            )}
+              {canResume && (
+                <Button onClick={handleResume} disabled={isControlLoading}>
+                  {isControlLoading ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  ) : (
+                    <Play className="mr-2 h-4 w-4" />
+                  )}
+                  Resume
+                </Button>
+              )}
 
-            {canStop && (
+              {canStop && (
               <AlertDialog open={confirmAction === "stop"} onOpenChange={(open) => setConfirmAction(open ? "stop" : null)}>
                 <AlertDialogTrigger asChild>
                   <Button variant="destructive" disabled={isControlLoading}>
@@ -215,9 +218,10 @@ export default function CampaignDetail() {
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>
-              </AlertDialog>
-            )}
-          </div>
+                </AlertDialog>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Status Card */}

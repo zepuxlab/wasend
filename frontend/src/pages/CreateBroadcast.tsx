@@ -21,6 +21,7 @@ import { useApprovedTemplates } from "@/hooks/useTemplates";
 import { useContacts, useContactLists } from "@/hooks/useContacts";
 import { useCreateCampaignBackend } from "@/hooks/useBackendCampaigns";
 import { useSupabase } from "@/hooks/useSupabase";
+import { useAuth } from "@/hooks/useAuth";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "@/hooks/use-toast";
 
@@ -33,7 +34,14 @@ const steps = [
 export default function CreateBroadcast() {
   const navigate = useNavigate();
   const { isConfigured } = useSupabase();
+  const { isUser } = useAuth();
   const { data: templates, isLoading: templatesLoading } = useApprovedTemplates();
+  
+  // Redirect user role to broadcasts list
+  if (isUser) {
+    navigate("/broadcasts");
+    return null;
+  }
   const { data: contacts } = useContacts();
   const { data: contactLists } = useContactLists();
   const createCampaign = useCreateCampaignBackend();

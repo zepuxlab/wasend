@@ -90,6 +90,7 @@ export function useAuth() {
     isAuthenticated: !!user,
     isAdmin: userRole === 'admin',
     isManager: userRole === 'manager' || userRole === 'admin',
+    isUser: userRole === 'user',
     signOut,
   };
 }
