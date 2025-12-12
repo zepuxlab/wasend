@@ -166,7 +166,7 @@ export default function Broadcasts() {
                     </TableCell>
                     <TableCell>
                       <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-                        {campaign.templates?.name || "—"}
+                        {campaign.template?.name || campaign.templates?.name || "—"}
                       </code>
                     </TableCell>
                     <TableCell className="text-right">

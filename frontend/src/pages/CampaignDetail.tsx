@@ -238,7 +238,7 @@ export default function CampaignDetail() {
             <div className="text-right">
               <p className="text-sm text-muted-foreground">Template</p>
               <code className="text-sm bg-muted px-2 py-0.5 rounded">
-                {campaign.templates?.name || "—"}
+                {campaign.template?.name || campaign.templates?.name || "—"}
               </code>
             </div>
           </div>

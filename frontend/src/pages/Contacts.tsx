@@ -604,6 +604,17 @@ export default function Contacts() {
             </Card>
           )
         )}
+
+        {/* Contact History Dialog */}
+        {selectedContactForHistory && (
+          <ContactHistoryDialog
+            contactId={selectedContactForHistory.id}
+            contactName={selectedContactForHistory.name || ""}
+            contactPhone={selectedContactForHistory.phone}
+            open={historyDialogOpen}
+            onOpenChange={setHistoryDialogOpen}
+          />
+        )}
       </div>
     </div>
   );
