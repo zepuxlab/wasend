@@ -90,10 +90,6 @@ export default function Auth() {
                 src="/relayne-logo.svg" 
                 alt="Relayne Logo" 
                 className="h-[48px] w-[48px]"
-                style={{ 
-                  filter: 'brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)',
-                  WebkitFilter: 'brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)'
-                }}
               />
               <h1 className="text-2xl font-bold">Zoho OAuth Authorization Code</h1>
             </div>
