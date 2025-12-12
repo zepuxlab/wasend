@@ -293,29 +293,32 @@ class ZohoService {
       const accessToken = await this.getAccessToken();
       
       // Форматируем сообщение для Notes
-      const directionLabel = message.direction === 'inbound' ? 'Inbound' : 'Outbound';
-      const timestamp = new Date(message.timestamp).toLocaleString('ru-RU', {
+      const directionLabel = message.direction === 'inbound' ? '📥 Inbound' : '📤 Outbound';
+      const timestamp = new Date(message.timestamp).toLocaleString('en-US', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
+        hour12: false,
       });
 
-      let noteContent = `[${directionLabel}] ${timestamp}\n${message.message}`;
+      let noteContent = `**${directionLabel} WhatsApp Message**\n`;
+      noteContent += `📅 ${timestamp}\n\n`;
+      noteContent += `${message.message}`;
       
       if (message.isTemplate && message.templateName) {
-        noteContent += `\n\nTemplate: ${message.templateName}`;
+        noteContent += `\n\n📋 Template: ${message.templateName}`;
       }
       
       if (message.messageStatus) {
-        noteContent += `\nStatus: ${message.messageStatus}`;
+        noteContent += `\n✅ Status: ${message.messageStatus}`;
       }
 
-      // Добавляем ссылку на диалог в Zoho (не на наш диалог)
+      // Добавляем ссылку на диалог в Zoho
       const zohoChatUrl = this.getZohoChatUrl(leadId, message.phone);
-      noteContent += `\n\n💬 Open in Zoho: ${zohoChatUrl}`;
+      noteContent += `\n\n💬 [Open Chat in Zoho](${zohoChatUrl})`;
 
       await this.api.post(
         `/crm/v2/Leads/${leadId}/Notes`,
