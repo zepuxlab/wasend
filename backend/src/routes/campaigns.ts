@@ -331,7 +331,7 @@ router.post(
 
       // Обновить статус кампании сразу
       await db.campaigns.update(id, {
-        status: 'starting',
+        status: 'running',
         started_at: new Date().toISOString(),
       });
 
