@@ -2,12 +2,15 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Try to load .env from project root first, then fallback to backend/.env
-const rootEnvPath = path.resolve(__dirname, '../../.env');
-const backendEnvPath = path.resolve(__dirname, '../.env');
+// __dirname in compiled code is dist/config/, so go up 3 levels to get to project root
+const rootEnvPath = path.resolve(__dirname, '../../../.env');
+const backendEnvPath = path.resolve(__dirname, '../../.env');
+const localEnvPath = path.resolve(__dirname, '../.env');
 
-// Load from root first, then backend (root takes precedence)
+// Load from root first, then backend, then local (root takes precedence)
 dotenv.config({ path: rootEnvPath });
 dotenv.config({ path: backendEnvPath });
+dotenv.config({ path: localEnvPath });
 
 const requiredEnvVars = [
   'SUPABASE_URL',
