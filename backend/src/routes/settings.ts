@@ -36,17 +36,38 @@ router.get(
 
       // Проверить Meta API
       try {
-        const phoneInfo = await metaApi.getPhoneNumberInfo();
-        const businessInfo = await metaApi.getBusinessAccountInfo();
-        status.meta_api = {
-          connected: true,
-          last_check: new Date().toISOString(),
-          phone_number: phoneInfo.display_phone_number,
-          business_name: businessInfo.name,
-        };
+        const health = await metaApi.getHealth();
+        if (health.connected) {
+          if (health.test_mode) {
+            status.meta_api = {
+              connected: true,
+              test_mode: true,
+              last_check: new Date().toISOString(),
+              message: health.message || 'Test mode enabled',
+            };
+          } else {
+            const phoneInfo = await metaApi.getPhoneNumberInfo();
+            const businessInfo = await metaApi.getBusinessAccountInfo();
+            status.meta_api = {
+              connected: true,
+              test_mode: false,
+              last_check: new Date().toISOString(),
+              phone_number: phoneInfo.display_phone_number,
+              business_name: businessInfo.name,
+            };
+          }
+        } else {
+          status.meta_api = {
+            connected: false,
+            test_mode: false,
+            last_check: new Date().toISOString(),
+            error: health.error || 'Connection failed',
+          };
+        }
       } catch (error: any) {
         status.meta_api = {
           connected: false,
+          test_mode: false,
           last_check: new Date().toISOString(),
           error: error.message || 'Connection failed',
         };
