@@ -571,12 +571,7 @@ export interface CreateCampaignRequest {
   contact_ids?: string[];
   contact_list_id?: string;
   contact_tags?: string[];
-  rate_limit?: {
-    batch?: number;
-    delay_minutes?: number;
-    hourly_cap?: number;
-    daily_cap?: number;
-  };
+  // rate_limit убран - теперь берется из настроек автоматически
   scheduled_at?: string;
 }
 

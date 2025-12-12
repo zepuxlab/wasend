@@ -14,12 +14,7 @@ const createCampaignSchema = z.object({
   contact_list_id: z.string().uuid().optional(),
   contact_ids: z.array(z.string().uuid()).optional(),
   contact_tags: z.array(z.string()).optional(),
-  rate_limit: z.object({
-    batch: z.number().int().positive(),
-    delay_minutes: z.number().int().positive(),
-    hourly_cap: z.number().int().positive().optional(),
-    daily_cap: z.number().int().positive().optional(),
-  }),
+  // rate_limit убран - теперь берется из настроек
 }).refine(
   (data) => {
     // Должен быть указан хотя бы один способ выбора контактов
@@ -149,18 +144,41 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
       });
     }
 
+    // Получить rate_limit из настроек
+    const campaignSettingsValue = await db.settings.get('campaign_settings');
+    let rateLimitSettings = {
+      defaultBatchSize: 50,
+      defaultDelaySeconds: 60,
+      defaultHourlyCap: null as number | null,
+      defaultDailyCap: null as number | null,
+    };
+
+    if (campaignSettingsValue) {
+      try {
+        const parsed = JSON.parse(campaignSettingsValue);
+        rateLimitSettings = {
+          defaultBatchSize: parsed.defaultBatchSize || 50,
+          defaultDelaySeconds: parsed.defaultDelaySeconds || 60,
+          defaultHourlyCap: parsed.defaultHourlyCap || null,
+          defaultDailyCap: parsed.defaultDailyCap || null,
+        };
+      } catch (e) {
+        console.warn('Failed to parse campaign_settings from DB:', e);
+      }
+    }
+
     // Создать кампанию
-    // Преобразуем rate_limit объект в отдельные поля для базы данных
+    // Используем rate_limit из настроек
     const campaign = await db.campaigns.create({
       name: body.name,
       description: body.description,
       template_id: body.template_id,
       status: 'draft',
       variable_mapping: body.variable_mapping,
-      rate_limit_per_batch: body.rate_limit.batch,
-      rate_limit_delay_seconds: body.rate_limit.delay_minutes * 60, // Конвертируем минуты в секунды
-      hourly_cap: body.rate_limit.hourly_cap || null,
-      daily_cap: body.rate_limit.daily_cap || null,
+      rate_limit_per_batch: rateLimitSettings.defaultBatchSize,
+      rate_limit_delay_seconds: rateLimitSettings.defaultDelaySeconds,
+      hourly_cap: rateLimitSettings.defaultHourlyCap,
+      daily_cap: rateLimitSettings.defaultDailyCap,
       total_recipients: contacts.length,
       sent_count: 0,
       delivered_count: 0,
@@ -219,15 +237,13 @@ router.patch(
         });
       }
 
-      // Преобразуем rate_limit объект в отдельные поля, если он есть
+      // Убираем rate_limit из обновлений - он теперь только в настройках
       const updates: any = { ...req.body };
-      if (updates.rate_limit) {
-        updates.rate_limit_per_batch = updates.rate_limit.batch;
-        updates.rate_limit_delay_seconds = updates.rate_limit.delay_minutes * 60;
-        updates.hourly_cap = updates.rate_limit.hourly_cap || null;
-        updates.daily_cap = updates.rate_limit.daily_cap || null;
-        delete updates.rate_limit;
-      }
+      delete updates.rate_limit;
+      delete updates.rate_limit_per_batch;
+      delete updates.rate_limit_delay_seconds;
+      delete updates.hourly_cap;
+      delete updates.daily_cap;
 
       const updated = await db.campaigns.update(id, updates);
       res.json(updated);

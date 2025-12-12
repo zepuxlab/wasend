@@ -409,10 +409,10 @@ export default function CampaignDetail() {
                 {recipients.slice(0, 50).map((recipient: any) => (
                   <TableRow key={recipient.id}>
                     <TableCell className="font-mono text-sm">
-                      {recipient.contacts?.phone || "—"}
+                      {recipient.contact?.phone || recipient.contacts?.phone || "—"}
                     </TableCell>
                     <TableCell>
-                      {recipient.contacts?.name || "—"}
+                      {recipient.contact?.name || recipient.contacts?.name || "—"}
                     </TableCell>
                     <TableCell>
                       <Badge

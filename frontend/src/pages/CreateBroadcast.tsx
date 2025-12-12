@@ -55,8 +55,6 @@ export default function CreateBroadcast() {
     recipientMethod: "all",
     selectedListId: "",
     numbers: "",
-    rateLimitPerBatch: 50,
-    rateLimitDelaySeconds: 60,
   });
 
   const selectedTemplate = templates?.find((t: any) => t.id === formData.templateId);
@@ -185,10 +183,7 @@ export default function CreateBroadcast() {
         description: "",
         template_id: formData.templateId,
         variable_mapping: formData.variableMapping,
-        rate_limit: {
-          batch: formData.rateLimitPerBatch,
-          delay_minutes: Math.ceil(formData.rateLimitDelaySeconds / 60),
-        },
+        // rate_limit теперь берется из настроек автоматически
         ...(contactListId && { contact_list_id: contactListId }),
         ...(contactIds.length > 0 && { contact_ids: contactIds }),
         ...(contactTags && contactTags.length > 0 && { contact_tags: contactTags }),
@@ -489,30 +484,10 @@ export default function CreateBroadcast() {
                 </TabsContent>
               </Tabs>
 
-              {/* Rate Limits */}
+              {/* Rate Limits теперь настраиваются в Settings */}
               <div className="space-y-4 pt-4 border-t">
-                <h4 className="font-medium">Rate Limits</h4>
-                <div className="grid gap-4 grid-cols-2">
-                  <div className="space-y-2">
-                    <Label>Messages per batch</Label>
-                    <Input
-                      type="number"
-                      value={formData.rateLimitPerBatch}
-                      onChange={(e) =>
-                        setFormData({ ...formData, rateLimitPerBatch: parseInt(e.target.value) || 50 })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Delay between batches (sec)</Label>
-                    <Input
-                      type="number"
-                      value={formData.rateLimitDelaySeconds}
-                      onChange={(e) =>
-                        setFormData({ ...formData, rateLimitDelaySeconds: parseInt(e.target.value) || 60 })
-                      }
-                    />
-                  </div>
+                <div className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
+                  <p>Rate limits настраиваются в разделе Settings и применяются ко всем кампаниям.</p>
                 </div>
               </div>
             </div>
@@ -544,9 +519,9 @@ export default function CreateBroadcast() {
                   <span className="font-medium text-lg">{getRecipientCount()}</span>
                 </div>
                 <div className="flex justify-between items-center py-2 border-b">
-                  <span className="text-muted-foreground">Rate</span>
-                  <span className="font-medium">
-                    {formData.rateLimitPerBatch} / batch, delay {formData.rateLimitDelaySeconds}s
+                  <span className="text-muted-foreground">Rate Limits</span>
+                  <span className="font-medium text-sm text-muted-foreground">
+                    Из настроек
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2">
