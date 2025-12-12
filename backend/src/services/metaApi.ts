@@ -18,40 +18,62 @@ class MetaApiService {
   /**
    * Нормализация номера телефона в формат E.164 для Meta API
    * Meta требует формат E.164: +[код страны][номер] (например, +971501234567)
-   * Формат: +[1-15 цифр], начинается с +, затем код страны (1-3 цифры), затем номер
+   * Правила:
+   * - Удаляем все символы кроме цифр и +
+   * - Если номер начинается с 0, удаляем его
+   * - Если нет + в начале, добавляем
+   * - Проверяем длину (7-15 цифр после +)
+   * - Номер должен начинаться с цифры 1-9 (код страны)
    */
   private normalizePhoneNumber(phone: string): string {
     if (!phone) {
       throw new Error('Phone number is required');
     }
 
-    // Убираем все символы кроме цифр и +
     let normalized = phone.replace(/[^\d+]/g, '');
-    
-    // Если номер начинается с +, убираем его временно для обработки
     const hasPlus = normalized.startsWith('+');
     if (hasPlus) {
       normalized = normalized.substring(1);
     }
-    
-    // Убираем ведущие нули (кроме случаев, когда это часть кода страны)
-    // Если номер начинается с 0, убираем его (обычно это внутренний формат)
     if (normalized.startsWith('0') && normalized.length > 1) {
       normalized = normalized.substring(1);
     }
-    
-    // Проверяем валидность: должен быть минимум 7 цифр (самый короткий валидный номер)
     if (normalized.length < 7 || normalized.length > 15) {
       throw new Error(`Invalid phone number length: ${normalized.length}. Must be 7-15 digits.`);
     }
-    
-    // Проверяем, что номер начинается с цифры 1-9 (код страны не может начинаться с 0)
     if (!/^[1-9]/.test(normalized)) {
       throw new Error('Phone number must start with digit 1-9 (country code)');
     }
-    
-    // Возвращаем в формате E.164 с +
     return '+' + normalized;
+  }
+
+  /**
+   * Проверить подключение к Meta API
+   */
+  async getHealth() {
+    try {
+      // Тестовый режим: если META_API_TEST_MODE=true, возвращаем успешный статус
+      if (process.env.META_API_TEST_MODE === 'true') {
+        return {
+          connected: true,
+          test_mode: true,
+          message: 'Test mode enabled - Meta API calls are mocked',
+        };
+      }
+      
+      // Пробуем получить информацию о номере телефона
+      await this.getPhoneNumberInfo();
+      return {
+        connected: true,
+        test_mode: false,
+      };
+    } catch (error: any) {
+      return {
+        connected: false,
+        test_mode: false,
+        error: error.message || 'Connection failed',
+      };
+    }
   }
 
   /**
@@ -59,6 +81,12 @@ class MetaApiService {
    */
   async getTemplates() {
     try {
+      // Тестовый режим: если META_API_TEST_MODE=true, возвращаем пустой массив
+      if (process.env.META_API_TEST_MODE === 'true') {
+        console.log('🧪 TEST MODE: Mocking Meta API templates request');
+        return [];
+      }
+      
       const response = await this.client.get(
         `/${config.meta.businessAccountId}/message_templates`,
         {
@@ -109,6 +137,20 @@ class MetaApiService {
         requestBody.template.components = components;
       }
       
+      // Тестовый режим: если META_API_TEST_MODE=true, не отправляем реальный запрос
+      if (process.env.META_API_TEST_MODE === 'true') {
+        console.log('🧪 TEST MODE: Mocking Meta API call for template message');
+        console.log('📤 Request:', JSON.stringify(requestBody, null, 2));
+        // Возвращаем мок-ответ, похожий на реальный ответ Meta API
+        return {
+          messaging_product: 'whatsapp',
+          contacts: [{ input: normalizedPhone, wa_id: normalizedPhone }],
+          messages: [{
+            id: `wamid.TEST_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+          }]
+        };
+      }
+      
       const response = await this.client.post(
         `/${config.meta.phoneNumberId}/messages`,
         requestBody
@@ -143,14 +185,30 @@ class MetaApiService {
       // Нормализовать номер телефона в формат E.164
       const normalizedPhone = this.normalizePhoneNumber(to);
       
+      const requestBody = {
+        messaging_product: 'whatsapp',
+        to: normalizedPhone,
+        type: 'text',
+        text: { body: text },
+      };
+      
+      // Тестовый режим: если META_API_TEST_MODE=true, не отправляем реальный запрос
+      if (process.env.META_API_TEST_MODE === 'true') {
+        console.log('🧪 TEST MODE: Mocking Meta API call for text message');
+        console.log('📤 Request:', JSON.stringify(requestBody, null, 2));
+        // Возвращаем мок-ответ, похожий на реальный ответ Meta API
+        return {
+          messaging_product: 'whatsapp',
+          contacts: [{ input: normalizedPhone, wa_id: normalizedPhone }],
+          messages: [{
+            id: `wamid.TEST_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+          }]
+        };
+      }
+      
       const response = await this.client.post(
         `/${config.meta.phoneNumberId}/messages`,
-        {
-          messaging_product: 'whatsapp',
-          to: normalizedPhone,
-          type: 'text',
-          text: { body: text },
-        }
+        requestBody
       );
       return response.data;
     } catch (error: any) {
@@ -178,6 +236,15 @@ class MetaApiService {
    */
   async getPhoneNumberInfo() {
     try {
+      // Тестовый режим: если META_API_TEST_MODE=true, возвращаем мок-данные
+      if (process.env.META_API_TEST_MODE === 'true') {
+        console.log('🧪 TEST MODE: Mocking Meta API phone number info request');
+        return {
+          display_phone_number: '+1234567890',
+          verified_name: 'Test Business',
+        };
+      }
+      
       const response = await this.client.get(
         `/${config.meta.phoneNumberId}`,
         {
@@ -199,6 +266,16 @@ class MetaApiService {
    */
   async getBusinessAccountInfo() {
     try {
+      // Тестовый режим: если META_API_TEST_MODE=true, возвращаем мок-данные
+      if (process.env.META_API_TEST_MODE === 'true') {
+        console.log('🧪 TEST MODE: Mocking Meta API business account info request');
+        return {
+          id: config.meta.businessAccountId,
+          name: 'Test Business Account',
+          message_template_namespace: 'test_namespace',
+        };
+      }
+      
       const response = await this.client.get(
         `/${config.meta.businessAccountId}`,
         {
@@ -267,17 +344,16 @@ export function buildTemplateComponents(
                 });
               }
             }
-            
             if (parameters.length > 0) {
               componentData.parameters = parameters;
               components.push(componentData);
             }
           }
         }
-        // Если нет переменных, Meta автоматически использует изображение из шаблона
-        // Не нужно добавлять компонент в этом случае
+        // Если нет переменных в HEADER с медиа, не добавляем компонент
+        // Meta автоматически использует статическое изображение из шаблона
       } else {
-        // Текстовый HEADER
+        // HEADER текстовый - обрабатываем переменные
         const text = component.text || '';
         const matches = text.match(/\{\{(\d+)\}\}/g) || [];
         
@@ -300,28 +376,23 @@ export function buildTemplateComponents(
               });
             }
           }
-          
           if (parameters.length > 0) {
             componentData.parameters = parameters;
             components.push(componentData);
           }
         }
       }
-    }
-    // Обработка BODY компонента
-    else if (component.type === 'BODY') {
+    } else if (component.type === 'BODY') {
+      // Обработка BODY компонента
       const componentData: any = {
         type: 'body',
       };
 
-      // Извлечь переменные из текста компонента (например, {{1}}, {{2}})
       const text = component.text || '';
       const matches = text.match(/\{\{(\d+)\}\}/g) || [];
       
       if (matches.length > 0) {
         const parameters: any[] = [];
-        
-        // Важно: параметры должны быть в порядке переменных ({{1}}, {{2}}, ...)
         const sortedMatches = matches.sort((a: string, b: string) => {
           const numA = parseInt(a.match(/\d+/)?.[0] || '0');
           const numB = parseInt(b.match(/\d+/)?.[0] || '0');
@@ -333,67 +404,56 @@ export function buildTemplateComponents(
           if (varNum) {
             const placeholder = `{{${varNum}}}`;
             const value = variables[placeholder] || '';
-            
             parameters.push({
               type: 'text',
               text: value || '',
             });
           }
         }
-
         if (parameters.length > 0) {
           componentData.parameters = parameters;
           components.push(componentData);
         }
       }
-    }
-    // Обработка BUTTONS компонента
-    else if (component.type === 'BUTTONS') {
-      // Meta API автоматически обрабатывает кнопки с URL из шаблона
-      // Если в шаблоне есть динамические URL (с переменными типа {{1}}), обрабатываем их
-      const buttons = component.buttons || [];
-      
-      for (const button of buttons) {
-        if (button.type === 'URL' && button.url) {
-          // Проверяем, есть ли переменные в URL (например, https://example.com/{{1}})
-          const urlMatches = button.url.match(/\{\{(\d+)\}\}/g) || [];
-          if (urlMatches.length > 0) {
-            // Если есть переменные, создаем компонент для кнопки
-            const urlParameters: any[] = [];
-            const sortedMatches = urlMatches.sort((a: string, b: string) => {
-              const numA = parseInt(a.match(/\d+/)?.[0] || '0');
-              const numB = parseInt(b.match(/\d+/)?.[0] || '0');
-              return numA - numB;
-            });
-            
-            for (const match of sortedMatches) {
-              const varNum = match.match(/\d+/)?.[0];
-              if (varNum) {
-                const placeholder = `{{${varNum}}}`;
-                const value = variables[placeholder] || '';
-                urlParameters.push({
-                  type: 'text',
-                  text: value || '',
-                });
+    } else if (component.type === 'BUTTONS') {
+      // Обработка BUTTONS компонента
+      const buttonComponents: any = {
+        type: 'button',
+        sub_type: 'url', // Assuming URL buttons for now
+        index: component.index, // Index of the button component
+        parameters: [],
+      };
+
+      // Check for dynamic URL parameters in buttons
+      if (component.buttons) {
+        for (const button of component.buttons) {
+          if (button.type === 'URL' && button.url) {
+            const urlMatches = button.url.match(/\{\{(\d+)\}\}/g) || [];
+            if (urlMatches.length > 0) {
+              const sortedUrlMatches = urlMatches.sort((a: string, b: string) => {
+                const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+                const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+                return numA - numB;
+              });
+              for (const match of sortedUrlMatches) {
+                const varNum = match.match(/\d+/)?.[0];
+                if (varNum) {
+                  const placeholder = `{{${varNum}}}`;
+                  const value = variables[placeholder] || '';
+                  buttonComponents.parameters.push({
+                    type: 'text',
+                    text: value || '',
+                  });
+                }
               }
             }
-            
-            // Добавляем компонент для кнопки с динамическим URL
-            if (urlParameters.length > 0) {
-              components.push({
-                type: 'button',
-                sub_type: 'url',
-                index: button.index || buttons.indexOf(button),
-                parameters: urlParameters,
-              });
-            }
           }
-          // Если URL статический (без переменных), Meta автоматически использует его из шаблона
         }
+      }
+      if (buttonComponents.parameters.length > 0) {
+        components.push(buttonComponents);
       }
     }
   }
-
   return components;
 }
-
