@@ -157,7 +157,7 @@ export default function Auth() {
             />
             <h1 className="text-2xl font-bold">WhatsApp Sendler</h1>
           </div>
-          <p className="text-muted-foreground">Broadcast Management Panel</p>
+          <p className="text-muted-foreground">amSendler</p>
         </div>
 
         <Tabs defaultValue="login" className="w-full">
