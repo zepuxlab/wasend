@@ -236,9 +236,6 @@ export default function Auth() {
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign Up
               </Button>
-              <p className="text-xs text-muted-foreground text-center">
-                New users receive "user" role. Admin can change the role.
-              </p>
             </form>
           </TabsContent>
         </Tabs>
