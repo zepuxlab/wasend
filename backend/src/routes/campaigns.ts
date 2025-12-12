@@ -263,17 +263,18 @@ router.delete(
 
       // Если кампания запущена или на паузе, сначала останавливаем её
       if (campaign.status === 'running' || campaign.status === 'paused') {
-        // Остановить кампанию
+        // Сначала обновляем статус кампании
         await db.campaigns.update(id, {
           status: 'stopped',
         });
 
         // Очистить очередь от задач этой кампании
+        // Игнорируем ошибки очистки, чтобы можно было удалить кампанию даже если задачи заблокированы
         try {
           await queueUtils.clean(id);
-        } catch (queueError) {
+        } catch (queueError: any) {
           // Игнорируем ошибки очистки очереди, продолжаем удаление
-          console.warn('Failed to clean queue for campaign:', queueError);
+          console.warn('Failed to clean queue for campaign:', queueError?.message || queueError);
         }
       }
 
@@ -534,18 +535,34 @@ router.post(
         });
       }
 
-      // Удалить задачи из очереди
-      await queueUtils.clean(id);
-
-      // Обновить статус всех pending получателей
-      await db.campaignRecipients.updateByCampaignId(id, {
-        status: 'pending',
-      });
-
-      // Обновить статус кампании
+      // Сначала обновляем статус кампании, чтобы новые задачи не добавлялись
       await db.campaigns.update(id, { status: 'stopped' });
 
-      res.json({ message: 'Campaign stopped' });
+      // Обновить статус всех pending/queued получателей на pending
+      // Это делаем до очистки очереди, чтобы не было рассинхронизации
+      try {
+        await db.campaignRecipients.updateByCampaignId(id, {
+          status: 'pending',
+        });
+      } catch (updateError) {
+        console.warn('Failed to update recipients status:', updateError);
+      }
+
+      // Удалить задачи из очереди (может быть частично успешным)
+      let cleanupResult;
+      try {
+        cleanupResult = await queueUtils.clean(id);
+      } catch (cleanError: any) {
+        // Не блокируем остановку кампании, даже если очистка очереди не удалась
+        console.warn('Queue cleanup had errors:', cleanError);
+        cleanupResult = { removed: 0, failed: 0, errors: [cleanError.message] };
+      }
+
+      // Вернуть результат с информацией о том, сколько задач удалено
+      res.json({ 
+        message: 'Campaign stopped',
+        queue_cleanup: cleanupResult || { removed: 0, failed: 0, errors: [] },
+      });
     } catch (error: any) {
       return next(error);
     }
