@@ -89,7 +89,7 @@ export default function Contacts() {
     
     setIsAddOpen(false);
     setNewContact({ phone: "", name: "", tags: "", opt_in: true });
-    toast({ title: "Контакт добавлен", description: "Контакт успешно создан" });
+    toast({ title: "Contact Added", description: "Contact created successfully" });
   };
 
   const parseCSV = (text: string) => {
@@ -101,7 +101,7 @@ export default function Contacts() {
     
     // Validate headers
     if (!headers.includes('phone')) {
-      errors.push('CSV должен содержать колонку "phone"');
+      errors.push('CSV must contain a "phone" column');
       return { data: [], errors };
     }
 
@@ -120,7 +120,7 @@ export default function Contacts() {
 
       // Validate phone
       if (!row.phone) {
-        errors.push(`Строка ${i + 1}: отсутствует номер телефона`);
+        errors.push(`Row ${i + 1}: missing phone number`);
         continue;
       }
 
@@ -148,7 +148,7 @@ export default function Contacts() {
     if (!file) return;
 
     if (!file.name.endsWith('.csv')) {
-      toast({ title: "Ошибка", description: "Пожалуйста, выберите CSV файл", variant: "destructive" });
+      toast({ title: "Error", description: "Please select a CSV file", variant: "destructive" });
       return;
     }
 
@@ -170,7 +170,7 @@ export default function Contacts() {
 
   const handleImportConfirm = async () => {
     if (importPreview.length === 0) {
-      toast({ title: "Ошибка", description: "Нет данных для импорта", variant: "destructive" });
+      toast({ title: "Error", description: "No data to import", variant: "destructive" });
       return;
     }
 
@@ -180,11 +180,11 @@ export default function Contacts() {
       setImportPreview([]);
       setImportErrors([]);
       toast({ 
-        title: "Импорт завершён", 
-        description: `Импортировано ${importPreview.length} контактов` 
+        title: "Import Complete", 
+        description: `Imported ${importPreview.length} contacts` 
       });
     } catch (error: any) {
-      toast({ title: "Ошибка импорта", description: error.message, variant: "destructive" });
+      toast({ title: "Import Error", description: error.message, variant: "destructive" });
     }
   };
 
@@ -196,12 +196,12 @@ export default function Contacts() {
     a.download = 'contacts_example.csv';
     a.click();
     window.URL.revokeObjectURL(url);
-    toast({ title: "Скачано", description: "Пример CSV файла скачан" });
+    toast({ title: "Downloaded", description: "CSV example file downloaded" });
   };
 
   const exportContacts = () => {
     if (!contacts || contacts.length === 0) {
-      toast({ title: "Ошибка", description: "Нет контактов для экспорта", variant: "destructive" });
+      toast({ title: "Error", description: "No contacts to export", variant: "destructive" });
       return;
     }
 
@@ -222,7 +222,7 @@ export default function Contacts() {
     a.download = `contacts_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
-    toast({ title: "Экспортировано", description: `${contacts.length} контактов экспортировано` });
+    toast({ title: "Exported", description: `${contacts.length} contacts exported` });
   };
 
   const handleDelete = async (id: string) => {
@@ -290,15 +290,15 @@ export default function Contacts() {
             />
             <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
               <Upload className="mr-2 h-4 w-4" />
-              Импорт CSV
+              Import CSV
             </Button>
             <Button variant="outline" onClick={exportContacts}>
               <Download className="mr-2 h-4 w-4" />
-              Экспорт
+              Export
             </Button>
             <Button variant="ghost" size="sm" onClick={downloadCSVExample}>
               <FileText className="mr-2 h-4 w-4" />
-              Пример CSV
+              CSV Example
             </Button>
             <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
               <DialogTrigger asChild>
@@ -372,7 +372,7 @@ export default function Contacts() {
                   <div className="p-3 rounded-lg bg-destructive/10 text-destructive text-sm space-y-1">
                     <div className="flex items-center gap-2 font-medium">
                       <AlertCircle className="h-4 w-4" />
-                      Обнаружены ошибки:
+                      Errors found:
                     </div>
                     {importErrors.map((err, i) => (
                       <p key={i}>• {err}</p>
@@ -384,17 +384,17 @@ export default function Contacts() {
                   <>
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <CheckCircle className="h-4 w-4 text-success" />
-                      Готово к импорту: {importPreview.length} контактов
+                      Ready to import: {importPreview.length} contacts
                     </div>
                     
                     <div className="border rounded-lg overflow-hidden">
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Телефон</TableHead>
-                            <TableHead>Имя</TableHead>
-                            <TableHead>Страна</TableHead>
-                            <TableHead>Теги</TableHead>
+                            <TableHead>Phone</TableHead>
+                            <TableHead>Name</TableHead>
+                            <TableHead>Country</TableHead>
+                            <TableHead>Tags</TableHead>
                             <TableHead>Opt-in</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -415,7 +415,7 @@ export default function Contacts() {
                               </TableCell>
                               <TableCell>
                                 <Badge variant={row.opt_in ? "default" : "secondary"}>
-                                  {row.opt_in ? "Да" : "Нет"}
+                                  {row.opt_in ? "Yes" : "No"}
                                 </Badge>
                               </TableCell>
                             </TableRow>
@@ -424,17 +424,17 @@ export default function Contacts() {
                       </Table>
                       {importPreview.length > 10 && (
                         <div className="p-2 text-center text-sm text-muted-foreground bg-muted/50">
-                          ... и ещё {importPreview.length - 10} контактов
+                          ... and {importPreview.length - 10} more contacts
                         </div>
                       )}
                     </div>
 
                     <div className="flex gap-2 justify-end">
                       <Button variant="outline" onClick={() => setIsImportOpen(false)}>
-                        Отмена
+                        Cancel
                       </Button>
                       <Button onClick={handleImportConfirm} disabled={bulkCreate.isPending}>
-                        {bulkCreate.isPending ? "Импорт..." : `Импортировать ${importPreview.length} контактов`}
+                        {bulkCreate.isPending ? "Importing..." : `Import ${importPreview.length} contacts`}
                       </Button>
                     </div>
                   </>
@@ -442,7 +442,7 @@ export default function Contacts() {
 
                 {importPreview.length === 0 && importErrors.length === 0 && (
                   <div className="py-8 text-center text-muted-foreground">
-                    Нет данных для импорта
+                    No data to import
                   </div>
                 )}
               </DialogContent>

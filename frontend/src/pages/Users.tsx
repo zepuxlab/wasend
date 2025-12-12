@@ -93,7 +93,7 @@ export default function Users() {
 
       setUsers(usersWithRoles);
     } catch (error: any) {
-      toast({ title: "Ошибка", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -103,7 +103,7 @@ export default function Users() {
     if (!supabase || !isAdmin) return;
     
     if (userId === user?.id) {
-      toast({ title: "Ошибка", description: "Нельзя изменить свою роль", variant: "destructive" });
+      toast({ title: "Error", description: "Cannot change your own role", variant: "destructive" });
       return;
     }
 
@@ -138,9 +138,9 @@ export default function Users() {
         u.id === userId ? { ...u, role: newRole } : u
       ));
 
-      toast({ title: "Роль обновлена", description: `Пользователю назначена роль: ${newRole}` });
+      toast({ title: "Role Updated", description: `User assigned role: ${newRole}` });
     } catch (error: any) {
-      toast({ title: "Ошибка", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     } finally {
       setUpdatingUserId(null);
     }
@@ -150,7 +150,7 @@ export default function Users() {
     if (!supabase || !isAdmin) return;
     
     if (userId === user?.id) {
-      toast({ title: "Ошибка", description: "Нельзя удалить себя", variant: "destructive" });
+      toast({ title: "Error", description: "Cannot delete yourself", variant: "destructive" });
       return;
     }
 
@@ -164,9 +164,9 @@ export default function Users() {
       if (error) throw error;
 
       setUsers(prev => prev.filter(u => u.id !== userId));
-      toast({ title: "Пользователь удалён" });
+      toast({ title: "User Deleted" });
     } catch (error: any) {
-      toast({ title: "Ошибка", description: error.message, variant: "destructive" });
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
@@ -180,23 +180,23 @@ export default function Users() {
 
   const getRoleLabel = (role: AppRole) => {
     switch (role) {
-      case 'admin': return 'Админ';
-      case 'manager': return 'Менеджер';
-      default: return 'Пользователь';
+      case 'admin': return 'Admin';
+      case 'manager': return 'Manager';
+      default: return 'User';
     }
   };
 
   if (!isConfigured) {
     return (
       <div className="min-h-screen">
-        <TopBar title="Пользователи" subtitle="Управление пользователями системы" />
+        <TopBar title="Users" subtitle="System user management" />
         <div className="p-6">
           <Card className="p-6">
             <EmptyState
               icon={UsersIcon}
-              title="База данных не подключена"
-              description="Подключите Supabase в настройках"
-              action={{ label: "Настройки", onClick: () => navigate("/settings") }}
+              title="Database not connected"
+              description="Connect to Supabase in Settings"
+              action={{ label: "Settings", onClick: () => navigate("/settings") }}
             />
           </Card>
         </div>
@@ -207,13 +207,13 @@ export default function Users() {
   if (!isAdmin) {
     return (
       <div className="min-h-screen">
-        <TopBar title="Пользователи" subtitle="Управление пользователями системы" />
+        <TopBar title="Users" subtitle="System user management" />
         <div className="p-6">
           <Card className="p-6">
             <EmptyState
               icon={ShieldAlert}
-              title="Доступ запрещён"
-              description="Только администраторы могут управлять пользователями"
+              title="Access Denied"
+              description="Only administrators can manage users"
             />
           </Card>
         </div>
@@ -224,33 +224,33 @@ export default function Users() {
   return (
     <div className="min-h-screen">
       <TopBar
-        title="Пользователи"
-        subtitle="Управление пользователями и ролями"
+        title="Users"
+        subtitle="User and role management"
       />
 
       <div className="p-6">
         {/* Stats */}
         <div className="mb-6 flex gap-4">
           <Card className="px-4 py-3">
-            <p className="text-sm text-muted-foreground">Всего</p>
+            <p className="text-sm text-muted-foreground">Total</p>
             <p className="text-2xl font-semibold">
               {isLoading ? <Skeleton className="h-8 w-12" /> : users.length}
             </p>
           </Card>
           <Card className="px-4 py-3">
-            <p className="text-sm text-muted-foreground">Админы</p>
+            <p className="text-sm text-muted-foreground">Admins</p>
             <p className="text-2xl font-semibold text-destructive">
               {isLoading ? <Skeleton className="h-8 w-12" /> : users.filter(u => u.role === 'admin').length}
             </p>
           </Card>
           <Card className="px-4 py-3">
-            <p className="text-sm text-muted-foreground">Менеджеры</p>
+            <p className="text-sm text-muted-foreground">Managers</p>
             <p className="text-2xl font-semibold text-primary">
               {isLoading ? <Skeleton className="h-8 w-12" /> : users.filter(u => u.role === 'manager').length}
             </p>
           </Card>
           <Card className="px-4 py-3">
-            <p className="text-sm text-muted-foreground">Пользователи</p>
+            <p className="text-sm text-muted-foreground">Users</p>
             <p className="text-2xl font-semibold text-muted-foreground">
               {isLoading ? <Skeleton className="h-8 w-12" /> : users.filter(u => u.role === 'user').length}
             </p>
@@ -275,10 +275,10 @@ export default function Users() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Email</TableHead>
-                  <TableHead>Имя</TableHead>
-                  <TableHead>Роль</TableHead>
-                  <TableHead>Дата регистрации</TableHead>
-                  <TableHead className="w-[100px]">Действия</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Registration Date</TableHead>
+                  <TableHead className="w-[100px]">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -287,7 +287,7 @@ export default function Users() {
                     <TableCell className="font-medium">
                       {u.email}
                       {u.id === user?.id && (
-                        <Badge variant="outline" className="ml-2 text-xs">Вы</Badge>
+                        <Badge variant="outline" className="ml-2 text-xs">You</Badge>
                       )}
                     </TableCell>
                     <TableCell>{u.full_name || "—"}</TableCell>
@@ -309,13 +309,13 @@ export default function Users() {
                             <SelectItem value="admin">
                               <div className="flex items-center gap-2">
                                 <Shield className="h-4 w-4 text-destructive" />
-                                Админ
+                                Admin
                               </div>
                             </SelectItem>
                             <SelectItem value="manager">
                               <div className="flex items-center gap-2">
                                 <Shield className="h-4 w-4 text-primary" />
-                                Менеджер
+                                Manager
                               </div>
                             </SelectItem>
                             <SelectItem value="user">
@@ -368,8 +368,8 @@ export default function Users() {
           <Card className="p-6">
             <EmptyState
               icon={UsersIcon}
-              title="Нет пользователей"
-              description="Пользователи появятся после регистрации"
+              title="No Users"
+              description="Users will appear after registration"
             />
           </Card>
         )}
