@@ -43,7 +43,12 @@ export const messageWorker = new Worker<MessageJobData>(
         variables
       );
 
-      // 4. Отправить через Meta API
+      // 4. Финальная проверка opt_in перед отправкой (дополнительная защита)
+      if (!contact.opt_in) {
+        throw new Error('Contact has not opted in - message not sent');
+      }
+
+      // 5. Отправить через Meta API
       const response = await metaApi.sendTemplateMessage({
         to: contact.phone,
         template: template.name,
@@ -51,17 +56,17 @@ export const messageWorker = new Worker<MessageJobData>(
         components,
       });
 
-      // 5. Обновить статус получателя
+      // 6. Обновить статус получателя
       await db.campaignRecipients.update(recipientId, {
         status: 'sent',
         whatsapp_message_id: response.messages?.[0]?.id,
         sent_at: new Date().toISOString(),
       });
 
-      // 6. Обновить счетчики кампании
+      // 7. Обновить счетчики кампании
       await db.campaigns.increment(campaignId, 'sent_count');
 
-      // 7. Записать в лог
+      // 8. Записать в лог
       await db.activityLogs.create({
         campaign_id: campaignId,
         contact_id: contact.id,
@@ -71,27 +76,66 @@ export const messageWorker = new Worker<MessageJobData>(
 
       return { success: true, messageId: response.messages?.[0]?.id };
     } catch (error: any) {
+      const errorMessage = error.message || 'Unknown error';
+      const errorCode = error.response?.data?.error?.code;
+      
+      // Критические ошибки Meta API - остановить кампанию
+      const criticalErrors = [
+        'RATE_LIMIT_HIT',
+        'TOO_MANY_REQUESTS',
+        'INVALID_OAUTH_ACCESS_TOKEN',
+        'PHONE_NUMBER_NOT_OWNED',
+      ];
+
+      if (errorCode && criticalErrors.includes(errorCode)) {
+        // Остановить кампанию при критических ошибках
+        await db.campaigns.update(campaignId, {
+          status: 'stopped',
+          error_message: `Campaign stopped due to critical error: ${errorMessage}`,
+        });
+        
+        // Записать критическую ошибку в лог
+        await db.activityLogs.create({
+          campaign_id: campaignId,
+          action: 'campaign_stopped_critical_error',
+          error: errorMessage,
+          details: { error_code: errorCode },
+        });
+      }
+
       // Обновить статус на failed
       await db.campaignRecipients.update(recipientId, {
         status: 'failed',
-        error_message: error.message || 'Unknown error',
+        error_message: errorMessage,
       });
 
       // Обновить счетчик ошибок
       await db.campaigns.increment(campaignId, 'failed_count');
 
       // Записать в лог
-      const recipient = await db.campaignRecipients.findById(recipientId);
-      const contact = await db.contacts.findById(recipient.contact_id);
-      await db.activityLogs.create({
-        campaign_id: campaignId,
-        contact_id: contact.id,
-        action: 'message_failed',
-        phone: contact.phone,
-        metadata: { error: error.message },
-      });
+      try {
+        const recipient = await db.campaignRecipients.findById(recipientId);
+        const contact = await db.contacts.findById(recipient.contact_id);
+        await db.activityLogs.create({
+          campaign_id: campaignId,
+          contact_id: contact.id,
+          action: 'message_failed',
+          phone: contact.phone,
+          error: errorMessage,
+          details: { error_code: errorCode },
+        });
+      } catch (logError) {
+        // Игнорировать ошибки логирования
+        console.error('Failed to log error:', logError);
+      }
 
-      throw error;
+      // Не бросать ошибку для некритических случаев, чтобы не останавливать всю очередь
+      if (errorCode && criticalErrors.includes(errorCode)) {
+        throw error; // Бросить только критические ошибки
+      }
+      
+      // Для остальных ошибок просто вернуть неудачу
+      return { success: false, error: errorMessage };
     }
   },
   {

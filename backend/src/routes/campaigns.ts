@@ -253,8 +253,37 @@ router.post(
       // Получить всех получателей со статусом pending
       const recipients = await db.campaignRecipients.findByStatus(id, 'pending');
 
-      // Создать задачи в очереди
+      // ВАЛИДАЦИЯ: Проверить opt-in перед добавлением в очередь
+      let validRecipients = 0;
+      let skippedRecipients = 0;
+
       for (const recipient of recipients) {
+        // Получить контакт для проверки opt_in
+        const contact = await db.contacts.findById(recipient.contact_id);
+        
+        // Пропустить контакты без opt_in (защита от бана)
+        if (!contact.opt_in) {
+          await db.campaignRecipients.update(recipient.id, {
+            status: 'failed',
+            error_message: 'Contact has not opted in',
+          });
+          skippedRecipients++;
+          continue;
+        }
+
+        // Валидация формата телефона
+        if (!contact.phone || !/^\+?[1-9]\d{1,14}$/.test(contact.phone.replace(/\s/g, ''))) {
+          await db.campaignRecipients.update(recipient.id, {
+            status: 'failed',
+            error_message: 'Invalid phone number format',
+          });
+          skippedRecipients++;
+          continue;
+        }
+
+        // Создать задачу в очереди с задержкой для соблюдения rate limits
+        const delay = validRecipients * (campaign.rate_limit_delay_seconds * 1000) / campaign.rate_limit_per_batch;
+        
         await messageQueue.add(
           'send-message',
           {
@@ -262,7 +291,12 @@ router.post(
             campaignId: id,
           },
           {
-            delay: 0,
+            delay: Math.floor(delay),
+            attempts: 3,
+            backoff: {
+              type: 'exponential',
+              delay: 5000, // 5 секунд между попытками
+            },
           }
         );
 
@@ -270,6 +304,8 @@ router.post(
         await db.campaignRecipients.update(recipient.id, {
           status: 'queued',
         });
+
+        validRecipients++;
       }
 
       // Обновить статус кампании
@@ -278,7 +314,12 @@ router.post(
         started_at: new Date().toISOString(),
       });
 
-      res.json({ message: 'Campaign started', queued: recipients.length });
+      res.json({ 
+        message: 'Campaign started', 
+        queued: validRecipients,
+        skipped: skippedRecipients,
+        total: recipients.length,
+      });
     } catch (error: any) {
       return next(error);
     }
