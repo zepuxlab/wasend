@@ -28,10 +28,22 @@ router.post('/sync', async (req: Request, res: Response, next: NextFunction) => 
 
       for (const component of components) {
         if (component.type === 'BODY' || component.type === 'HEADER') {
-          const text = component.text || component.example?.body_text?.[0] || '';
+          // Переменные в тексте BODY или HEADER
+          const text = component.text || component.example?.body_text?.[0] || component.example?.header_text?.[0] || '';
           const matches = text.match(/\{\{(\d+)\}\}/g);
           if (matches) {
             variables.push(...matches);
+          }
+        } else if (component.type === 'BUTTONS') {
+          // Переменные в URL кнопок (например, https://example.com/{{1}})
+          const buttons = component.buttons || [];
+          for (const button of buttons) {
+            if (button.type === 'URL' && button.url) {
+              const urlMatches = button.url.match(/\{\{(\d+)\}\}/g);
+              if (urlMatches) {
+                variables.push(...urlMatches);
+              }
+            }
           }
         }
       }

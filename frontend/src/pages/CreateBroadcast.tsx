@@ -59,7 +59,12 @@ export default function CreateBroadcast() {
   });
 
   const selectedTemplate = templates?.find((t: any) => t.id === formData.templateId);
-  const templateVariables = selectedTemplate?.variables || [];
+  // Получаем переменные из шаблона и сортируем их по номеру ({{1}}, {{2}}, ...)
+  const templateVariables = (selectedTemplate?.variables || []).sort((a: string, b: string) => {
+    const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+    const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+    return numA - numB;
+  });
 
   const getRecipientCount = (): number => {
     if (formData.recipientMethod === "all") {
@@ -405,10 +410,10 @@ export default function CreateBroadcast() {
                       Specify which contact data to use for variables
                     </p>
                   </div>
-                  {templateVariables.map((varName: string, index: number) => (
+                  {templateVariables.map((varName: string) => (
                     <div key={varName} className="flex items-center gap-4">
                       <span className="text-sm font-mono bg-muted px-2 py-1 rounded">
-                        {`{{${index + 1}}}`}
+                        {varName}
                       </span>
                       <ArrowRight className="h-4 w-4 text-muted-foreground" />
                       <Select
@@ -429,7 +434,6 @@ export default function CreateBroadcast() {
                         <SelectContent>
                           <SelectItem value="name">Name</SelectItem>
                           <SelectItem value="phone">Phone</SelectItem>
-                          <SelectItem value="country">Country</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
