@@ -12,7 +12,7 @@ router.get(
     try {
       const status: any = {
         backend_api: {
-          connected: true, // Backend is running if we can respond
+          connected: true, // Backend is running if we can respond to this request
           last_check: new Date().toISOString(),
         },
         database: {

@@ -3,6 +3,11 @@ import { TopBar } from "@/components/layout/TopBar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Separator } from "@/components/ui/separator";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   CheckCircle,
   RefreshCw,
@@ -19,6 +24,19 @@ export default function Settings() {
   const [status, setStatus] = useState<ConnectionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lastRefresh, setLastRefresh] = useState<Date>(new Date());
+  
+  // Campaign settings state
+  const [campaignSettings, setCampaignSettings] = useState({
+    defaultBatchSize: 50,
+    defaultDelaySeconds: 60,
+    defaultHourlyCap: 1000,
+    defaultDailyCap: 10000,
+    utmSource: "whatsapp",
+    utmMedium: "broadcast",
+    dailyLimitWarning: true,
+    dailyLimitAmount: 100,
+    pauseOnLimit: false,
+  });
 
   const fetchStatus = async () => {
     try {
@@ -247,10 +265,214 @@ export default function Settings() {
           </Card>
         </div>
 
-        {/* Last Refresh Info */}
-        <div className="text-center text-sm text-muted-foreground">
-          Last refreshed: {lastRefresh.toLocaleTimeString()}
-        </div>
+        {/* Campaign Settings Tab */}
+        <Tabs defaultValue="status" className="space-y-6">
+          <TabsList>
+            <TabsTrigger value="status">Connection Status</TabsTrigger>
+            <TabsTrigger value="campaigns">Campaign Settings</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="status">
+            {/* Last Refresh Info */}
+            <div className="text-center text-sm text-muted-foreground">
+              Last refreshed: {lastRefresh.toLocaleTimeString()}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="campaigns" className="space-y-6">
+            {/* UTM Settings */}
+            <Card className="p-6">
+              <h3 className="text-base font-semibold text-foreground mb-4">
+                Default UTM Parameters
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Applied to all links in campaigns
+              </p>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="utm-source">UTM Source</Label>
+                  <Input
+                    id="utm-source"
+                    value={campaignSettings.utmSource}
+                    onChange={(e) =>
+                      setCampaignSettings({
+                        ...campaignSettings,
+                        utmSource: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="utm-medium">UTM Medium</Label>
+                  <Input
+                    id="utm-medium"
+                    value={campaignSettings.utmMedium}
+                    onChange={(e) =>
+                      setCampaignSettings({
+                        ...campaignSettings,
+                        utmMedium: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {/* Rate Limits */}
+            <Card className="p-6">
+              <h3 className="text-base font-semibold text-foreground mb-4">
+                Default Rate Limits
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Settings for new campaigns
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="batch-size">Messages per batch</Label>
+                  <Input
+                    id="batch-size"
+                    type="number"
+                    value={campaignSettings.defaultBatchSize}
+                    onChange={(e) =>
+                      setCampaignSettings({
+                        ...campaignSettings,
+                        defaultBatchSize: parseInt(e.target.value) || 50,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="batch-delay">Delay between batches (sec)</Label>
+                  <Input
+                    id="batch-delay"
+                    type="number"
+                    value={campaignSettings.defaultDelaySeconds}
+                    onChange={(e) =>
+                      setCampaignSettings({
+                        ...campaignSettings,
+                        defaultDelaySeconds: parseInt(e.target.value) || 60,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="hourly-cap">Hourly cap</Label>
+                  <Input
+                    id="hourly-cap"
+                    type="number"
+                    value={campaignSettings.defaultHourlyCap}
+                    onChange={(e) =>
+                      setCampaignSettings({
+                        ...campaignSettings,
+                        defaultHourlyCap: parseInt(e.target.value) || 1000,
+                      })
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="daily-cap">Daily cap</Label>
+                  <Input
+                    id="daily-cap"
+                    type="number"
+                    value={campaignSettings.defaultDailyCap}
+                    onChange={(e) =>
+                      setCampaignSettings({
+                        ...campaignSettings,
+                        defaultDailyCap: parseInt(e.target.value) || 10000,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </Card>
+
+            {/* Cost Limits */}
+            <Card className="p-6">
+              <h3 className="text-base font-semibold text-foreground mb-4">
+                Cost Limits
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Alerts and automatic restrictions
+              </p>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground">
+                      Daily limit warning
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Notification when threshold is exceeded
+                    </p>
+                  </div>
+                  <Switch
+                    checked={campaignSettings.dailyLimitWarning}
+                    onCheckedChange={(checked) =>
+                      setCampaignSettings({
+                        ...campaignSettings,
+                        dailyLimitWarning: checked,
+                      })
+                    }
+                  />
+                </div>
+
+                <Separator />
+
+                <div className="space-y-2">
+                  <Label htmlFor="daily-limit">Daily limit (€)</Label>
+                  <Input
+                    id="daily-limit"
+                    type="number"
+                    value={campaignSettings.dailyLimitAmount}
+                    onChange={(e) =>
+                      setCampaignSettings({
+                        ...campaignSettings,
+                        dailyLimitAmount: parseInt(e.target.value) || 100,
+                      })
+                    }
+                    className="w-32"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="font-medium text-foreground">
+                      Pause on limit reached
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Automatically pause campaigns
+                    </p>
+                  </div>
+                  <Switch
+                    checked={campaignSettings.pauseOnLimit}
+                    onCheckedChange={(checked) =>
+                      setCampaignSettings({
+                        ...campaignSettings,
+                        pauseOnLimit: checked,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+            </Card>
+
+            <div className="flex justify-end">
+              <Button
+                onClick={() => {
+                  // TODO: Save to backend
+                  toast({
+                    title: "Settings Saved",
+                    description: "Campaign settings have been updated",
+                  });
+                }}
+              >
+                Save Settings
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
