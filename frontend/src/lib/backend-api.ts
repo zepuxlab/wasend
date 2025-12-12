@@ -310,6 +310,12 @@ export const contactListsBackendApi = {
       method: 'POST',
       body: JSON.stringify({ contact_ids: contactIds }),
     }),
+    
+  import: (listId: string, contacts: Array<{ phone: string; name?: string | null; tags?: string[]; opt_in?: boolean }>) =>
+    apiRequest<{ imported: number; skipped: number; added_to_list: number }>(`/contact-lists/${listId}/import`, {
+      method: 'POST',
+      body: JSON.stringify({ contacts }),
+    }),
 };
 
 // ============================================

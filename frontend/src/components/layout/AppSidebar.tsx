@@ -9,6 +9,7 @@ import {
   Settings,
   UsersRound,
   LogOut,
+  ClipboardList,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,6 +23,7 @@ const navigation = [
   { name: "Chats", href: "/chats", icon: MessageSquare },
   { name: "Templates", href: "/templates", icon: FileText },
   { name: "Contacts", href: "/contacts", icon: Users },
+  { name: "Lists", href: "/lists", icon: ClipboardList },
   { name: "Logs", href: "/logs", icon: Activity },
   { name: "Settings", href: "/settings", icon: Settings },
 ];

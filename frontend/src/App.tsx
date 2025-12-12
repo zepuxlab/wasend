@@ -12,6 +12,7 @@ import CampaignDetail from "@/pages/CampaignDetail";
 import Chats from "@/pages/Chats";
 import Templates from "@/pages/Templates";
 import Contacts from "@/pages/Contacts";
+import Lists from "@/pages/Lists";
 import Logs from "@/pages/Logs";
 import Settings from "@/pages/Settings";
 import Users from "@/pages/Users";
@@ -118,6 +119,7 @@ function AppContent() {
           <Route path="/chats" element={<Chats />} />
           <Route path="/templates" element={<Templates />} />
           <Route path="/contacts" element={<Contacts />} />
+          <Route path="/lists" element={<Lists />} />
           <Route path="/logs" element={<Logs />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/users" element={<Users />} />

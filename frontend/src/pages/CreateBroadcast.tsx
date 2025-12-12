@@ -74,8 +74,11 @@ export default function CreateBroadcast() {
       return formData.numbers.split("\n").filter(Boolean).length;
     }
     if (formData.recipientMethod === "list" && formData.selectedListId) {
-      // Would need to fetch list count - return 0 for now
-      return 0;
+      // Получаем количество контактов из выбранного списка
+      const selectedList = contactLists?.find((l: any) => l.id === formData.selectedListId);
+      // Если у списка есть информация о количестве контактов, используем её
+      // Иначе возвращаем 0 (будет загружено при создании кампании)
+      return selectedList?.contact_count || 0;
     }
     return 0;
   };
@@ -496,17 +499,31 @@ export default function CreateBroadcast() {
                       <SelectContent>
                         {contactLists?.length === 0 ? (
                           <div className="p-2 text-sm text-muted-foreground">
-                            No saved lists
+                            No saved lists. Create one in Lists section.
                           </div>
                         ) : (
                           contactLists?.map((list: any) => (
                             <SelectItem key={list.id} value={list.id}>
-                              {list.name}
+                              {list.name} {list.contact_count ? `(${list.contact_count})` : ''}
                             </SelectItem>
                           ))
                         )}
                       </SelectContent>
                     </Select>
+                    {formData.selectedListId && (
+                      <div className="rounded-lg border border-border p-6 text-center">
+                        <Users className="mx-auto h-10 w-10 text-primary" />
+                        <p className="mt-3 text-sm font-medium">
+                          Selected list
+                        </p>
+                        <p className="text-3xl font-bold mt-2 text-primary">
+                          {getRecipientCount()}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          recipients
+                        </p>
+                      </div>
+                    )}
                   </div>
                 </TabsContent>
 

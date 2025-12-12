@@ -52,12 +52,9 @@ export default function Contacts() {
   const navigate = useNavigate();
   const { isConfigured } = useSupabase();
   const { isUser } = useAuth();
-  // Фильтр по источнику контактов
-  const [contactSource, setContactSource] = useState<'all' | 'auto' | 'manual'>('all');
-  
-  // Используем backend API с фильтром по source
+  // Показываем только контакты, которые стали нашими после их ответа (source='auto')
   const { data: contacts, isLoading, error } = useContactsFromBackend(
-    contactSource !== 'all' ? { source: contactSource } : undefined
+    { source: 'auto' }
   );
   const createContact = useCreateContactBackend();
   const deleteContact = useDeleteContactBackend();
@@ -296,114 +293,12 @@ export default function Contacts() {
             />
           </div>
           
-          {/* Переключатель источника контактов */}
-          <div className="flex items-center gap-2">
-            <Label className="text-sm text-muted-foreground">Source:</Label>
-            <div className="flex gap-1 rounded-lg border border-border bg-background p-1">
-              <Button
-                variant={contactSource === 'all' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setContactSource('all')}
-                className="h-8"
-              >
-                All
-              </Button>
-              <Button
-                variant={contactSource === 'manual' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setContactSource('manual')}
-                className="h-8"
-              >
-                Manual
-              </Button>
-              <Button
-                variant={contactSource === 'auto' ? 'default' : 'ghost'}
-                size="sm"
-                onClick={() => setContactSource('auto')}
-                className="h-8"
-              >
-                Auto
-              </Button>
-            </div>
-          </div>
           {!isUser && (
             <div className="flex gap-2">
-              <input
-                type="file"
-                accept=".csv"
-                ref={fileInputRef}
-                onChange={handleFileUpload}
-                className="hidden"
-              />
-              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                <Upload className="mr-2 h-4 w-4" />
-                Import CSV
-              </Button>
               <Button variant="outline" onClick={exportContacts}>
                 <Download className="mr-2 h-4 w-4" />
                 Export
               </Button>
-              <Button variant="ghost" size="sm" onClick={downloadCSVExample}>
-                <FileText className="mr-2 h-4 w-4" />
-                CSV Example
-              </Button>
-              <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                <DialogTrigger asChild>
-                  <Button>
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Contact
-                  </Button>
-                </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Contact</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 pt-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      placeholder="+39 XXX XXX XXXX"
-                      value={newContact.phone}
-                      onChange={(e) => setNewContact({ ...newContact, phone: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="name">Name (optional)</Label>
-                    <Input
-                      id="name"
-                      placeholder="Full name"
-                      value={newContact.name}
-                      onChange={(e) => setNewContact({ ...newContact, name: e.target.value })}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="tags">Tags (optional, comma-separated)</Label>
-                    <Input
-                      id="tags"
-                      placeholder="VIP, Newsletter"
-                      value={newContact.tags}
-                      onChange={(e) => setNewContact({ ...newContact, tags: e.target.value })}
-                    />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="opt-in">Opt-in Consent</Label>
-                    <Switch
-                      id="opt-in"
-                      checked={newContact.opt_in}
-                      onCheckedChange={(checked) => setNewContact({ ...newContact, opt_in: checked })}
-                    />
-                  </div>
-                  <Button
-                    className="w-full"
-                    onClick={handleAddContact}
-                    disabled={createContact.isPending}
-                  >
-                    {createContact.isPending ? "Adding..." : "Add Contact"}
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
             </div>
           )}
 
