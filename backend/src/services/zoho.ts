@@ -226,7 +226,11 @@ class ZohoService {
 
     try {
       const accessToken = await this.getAccessToken();
-      const timestamp = new Date(message.timestamp).toISOString();
+      const timestamp = new Date(message.timestamp);
+      
+      // Форматируем дату и время для Zoho
+      const dueDate = timestamp.toISOString().split('T')[0]; // YYYY-MM-DD
+      const dueTime = timestamp.toTimeString().split(' ')[0]; // HH:MM:SS
       
       // Создаем Activity типа "Message" для отображения в модуле Messages
       const activityData: any = {
@@ -235,10 +239,12 @@ class ZohoService {
           : `Outgoing WhatsApp Message`,
         Description: message.message,
         Activity_Type: 'Message',
-        Due_Date: timestamp,
-        Due_Time: timestamp,
+        Due_Date: dueDate,
+        Due_Time: dueTime,
         What_Id: leadId, // Связываем с лидом
         Status: 'Completed',
+        // Добавляем дополнительные поля для лучшей интеграции с Messages
+        Send_Notification_Email: false,
       };
 
       // Если это шаблон, добавляем информацию
@@ -247,7 +253,7 @@ class ZohoService {
       }
 
       // Создаем Activity (сообщение)
-      await this.api.post(
+      const response = await this.api.post(
         '/crm/v2/Activities',
         {
           data: [activityData],
@@ -260,12 +266,15 @@ class ZohoService {
         }
       );
 
+      console.log('Zoho: Message activity created:', response.data);
+
       // Также добавляем в Notes для полной истории
       await this.addNoteToLead(leadId, message);
 
       return true;
     } catch (error: any) {
       console.error('Zoho: Failed to add message activity:', error.response?.data || error.message);
+      console.error('Zoho: Error details:', JSON.stringify(error.response?.data, null, 2));
       // Пробуем добавить только в Notes как fallback
       return await this.addNoteToLead(leadId, message);
     }
