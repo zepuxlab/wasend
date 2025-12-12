@@ -60,13 +60,13 @@ export function AppSidebar() {
         <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-6">
           <img 
             src="https://office.ampriomilano.com/b2b/images/AM_logo_mini.svg" 
-            alt="AMSendler Logo" 
+            alt="amSendler Logo" 
             className="h-[38px] w-[38px]"
-            style={{ filter: 'brightness(0) saturate(100%) invert(30%) sepia(68%) saturate(1234%) hue-rotate(113deg) brightness(95%) contrast(85%)' }}
+            style={{ filter: 'brightness(0) saturate(100%) invert(14%) sepia(93%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)' }}
           />
           <div className="flex flex-col">
-            <span className="text-sm font-semibold text-foreground">AMSendler</span>
-            <span className="text-xs text-sidebar-muted">WhatsApp Sendler</span>
+            <span className="text-sm font-semibold text-foreground">amSendler</span>
+            <span className="text-xs text-sidebar-muted">Broadcast Panel</span>
           </div>
         </div>
 

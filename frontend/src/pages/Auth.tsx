@@ -151,13 +151,13 @@ export default function Auth() {
           <div className="flex items-center justify-center gap-2 mb-2">
             <img 
               src="https://office.ampriomilano.com/b2b/images/AM_logo_mini.svg" 
-              alt="AMSendler Logo" 
+              alt="amSendler Logo" 
               className="h-[38px] w-[38px]"
-              style={{ filter: 'brightness(0) saturate(100%) invert(30%) sepia(68%) saturate(1234%) hue-rotate(113deg) brightness(95%) contrast(85%)' }}
+              style={{ filter: 'brightness(0) saturate(100%) invert(14%) sepia(93%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)' }}
             />
-            <h1 className="text-2xl font-bold">WhatsApp Sendler</h1>
+            <h1 className="text-2xl font-bold">amSendler</h1>
           </div>
-          <p className="text-muted-foreground">amSendler</p>
+          <p className="text-muted-foreground">Broadcast Panel</p>
         </div>
 
         <Tabs defaultValue="login" className="w-full">
