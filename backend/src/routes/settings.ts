@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { metaApi } from '../services/metaApi';
 import { config } from '../config/env';
 import { supabase, db } from '../services/supabase';
+import { zohoService } from '../services/zoho';
 
 const router = Router();
 
@@ -25,6 +26,11 @@ router.get(
         webhook: {
           active: !!config.meta.webhookVerifyToken,
           last_received: null,
+        },
+        zoho: {
+          enabled: config.zoho.enabled,
+          connected: false,
+          last_check: new Date().toISOString(),
         },
       };
 
@@ -52,6 +58,41 @@ router.get(
         status.database.connected = !error;
       } catch (error) {
         status.database.connected = false;
+      }
+
+      // Проверить Zoho CRM (если интеграция включена)
+      if (config.zoho.enabled) {
+        try {
+          // Пробуем получить Access Token - если получили, значит подключение работает
+          const accessToken = await zohoService.getAccessToken();
+          if (accessToken) {
+            status.zoho = {
+              enabled: true,
+              connected: true,
+              last_check: new Date().toISOString(),
+            };
+          } else {
+            status.zoho = {
+              enabled: true,
+              connected: false,
+              last_check: new Date().toISOString(),
+              error: 'Failed to get access token',
+            };
+          }
+        } catch (error: any) {
+          status.zoho = {
+            enabled: true,
+            connected: false,
+            last_check: new Date().toISOString(),
+            error: error.message || 'Connection failed',
+          };
+        }
+      } else {
+        status.zoho = {
+          enabled: false,
+          connected: false,
+          last_check: new Date().toISOString(),
+        };
       }
 
       res.json(status);

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
-import { Search, Send, Tag, CheckCircle, MessageSquare, RefreshCcw, Clock, Loader2 } from "lucide-react";
+import { Search, Send, Tag, CheckCircle, MessageSquare, RefreshCcw, Clock, Loader2, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   useChatsFromBackend,
@@ -236,6 +236,16 @@ export default function Chats() {
                   {selectedChat.tags?.map((tag: string) => (
                     <Badge key={tag} variant="outline">{tag}</Badge>
                   ))}
+                  {selectedChat.zoho_chat_url && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open(selectedChat.zoho_chat_url, '_blank')}
+                    >
+                      <ExternalLink className="mr-2 h-4 w-4" />
+                      Open in Zoho
+                    </Button>
+                  )}
                   {!isUser && (
                     <Dialog open={tagDialogOpen} onOpenChange={setTagDialogOpen}>
                       <DialogTrigger asChild>

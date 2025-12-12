@@ -595,6 +595,7 @@ export interface Chat {
   reply_window_expires_at: string | null;
   can_reply: boolean;
   unread_count: number;
+  zoho_chat_url?: string; // Ссылка на диалог в Zoho
   created_at: string;
   updated_at: string;
 }
@@ -664,5 +665,11 @@ export interface ConnectionStatus {
   webhook: {
     active: boolean;
     last_received: string | null;
+  };
+  zoho?: {
+    enabled: boolean;
+    connected: boolean;
+    last_check?: string;
+    error?: string;
   };
 }

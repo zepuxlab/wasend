@@ -16,6 +16,7 @@ import {
   Server,
   Webhook,
   MessageSquare,
+  Building2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { settingsBackendApi, ConnectionStatus } from "@/lib/backend-api";
@@ -301,6 +302,65 @@ export default function Settings() {
                 {status?.webhook.last_received && (
                   <p className="text-xs text-muted-foreground mt-1">
                     Last received: {formatTime(status.webhook.last_received)}
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+
+          {/* Zoho CRM Status */}
+          <Card className="p-6">
+            <div className="flex items-start gap-4">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Building2
+                  className={`h-6 w-6 ${
+                    status?.zoho?.connected
+                      ? "text-success"
+                      : status?.zoho?.enabled
+                      ? "text-destructive"
+                      : "text-muted-foreground"
+                  }`}
+                />
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="font-semibold text-foreground">Zoho CRM</h3>
+                  <Badge
+                    className={
+                      status?.zoho?.enabled
+                        ? status?.zoho?.connected
+                          ? "bg-success/10 text-success"
+                          : "bg-destructive/10 text-destructive"
+                        : "bg-muted/10 text-muted-foreground"
+                    }
+                  >
+                    {status?.zoho?.enabled
+                      ? status?.zoho?.connected
+                        ? "Connected"
+                        : "Disconnected"
+                      : "Disabled"}
+                  </Badge>
+                </div>
+                {status?.zoho?.enabled ? (
+                  <>
+                    {status.zoho.connected ? (
+                      <p className="text-sm text-muted-foreground">
+                        Zoho CRM integration is active
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        {status.zoho.error || "Zoho CRM connection failed"}
+                      </p>
+                    )}
+                    {status.zoho.last_check && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Last check: {formatTime(status.zoho.last_check)}
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    Zoho CRM integration is disabled
                   </p>
                 )}
               </div>

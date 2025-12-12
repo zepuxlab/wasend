@@ -22,6 +22,13 @@ const requiredEnvVars = [
   'META_WEBHOOK_VERIFY_TOKEN',
 ];
 
+// Zoho credentials (optional - only required if ZOHO_CRM_ENABLED=true)
+const optionalZohoVars = [
+  'ZOHO_CLIENT_ID',
+  'ZOHO_CLIENT_SECRET',
+  'ZOHO_REFRESH_TOKEN',
+];
+
 export function validateEnv() {
   const missing = requiredEnvVars.filter((key) => !process.env[key]);
 
@@ -54,5 +61,14 @@ export const config = {
   jwt: {
     secret: process.env.JWT_SECRET || '',
   },
+  zoho: {
+    enabled: process.env.ZOHO_CRM_ENABLED === 'true',
+    clientId: process.env.ZOHO_CLIENT_ID || '',
+    clientSecret: process.env.ZOHO_CLIENT_SECRET || '',
+    refreshToken: process.env.ZOHO_REFRESH_TOKEN || '',
+    apiDomain: process.env.ZOHO_API_DOMAIN || 'https://www.zohoapis.com',
+    orgId: process.env.ZOHO_ORG_ID || '', // Organization ID для создания ссылок на диалоги
+  },
+  frontendUrl: process.env.FRONTEND_URL || 'https://office.ampriomilano.com',
 };
 

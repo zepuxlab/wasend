@@ -2,6 +2,8 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { db } from '../services/supabase';
 import { metaApi } from '../services/metaApi';
 import { z } from 'zod';
+import { config } from '../config/env';
+import { zohoService } from '../services/zoho';
 
 const router = Router();
 
@@ -29,6 +31,26 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { id } = req.params;
     const chat = await db.chats.findById(id);
+    
+    if (!chat) {
+      return res.status(404).json({
+        error: true,
+        message: 'Chat not found',
+        code: 'NOT_FOUND',
+      });
+    }
+    
+    // Добавить ссылку на Zoho диалог, если интеграция включена
+    if (config.zoho.enabled) {
+      const contact = await db.contacts.findById(chat.contact_id);
+      if (contact) {
+        const leadId = await zohoService.getLeadIdByPhone(contact.phone);
+        if (leadId) {
+          (chat as any).zoho_chat_url = zohoService.getZohoChatUrl(leadId, contact.phone);
+        }
+      }
+    }
+    
     res.json(chat);
   } catch (error: any) {
     if (error.code === 'PGRST116') {
@@ -104,6 +126,20 @@ router.post(
           now.getTime() + 24 * 60 * 60 * 1000
         ).toISOString(),
       });
+
+      // Синхронизировать с Zoho (асинхронно, не блокируем основной поток)
+      if (config.zoho.enabled) {
+        zohoService.syncMessage({
+          phone: contact.phone,
+          message: body.content,
+          direction: 'outbound',
+          timestamp: now,
+          contactName: contact.name,
+          chatId: id, // Добавляем chatId для создания ссылки
+        }).catch((error) => {
+          console.error('Zoho sync error (non-blocking):', error);
+        });
+      }
 
       res.status(201).json({ message: 'Message sent' });
     } catch (error: any) {

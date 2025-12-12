@@ -2,6 +2,7 @@ import { Router, Request, Response, NextFunction } from 'express';
 import { config } from '../config/env';
 import { db, dbSupabase } from '../services/supabase';
 import { MetaWebhookMessage, MetaWebhookStatus } from '../types';
+import { zohoService } from '../services/zoho';
 
 const router = Router();
 
@@ -101,6 +102,22 @@ async function handleIncomingMessage(message: MetaWebhookMessage) {
       whatsapp_message_id: message.id,
       created_at: timestamp.toISOString(),
     });
+
+    // Синхронизировать с Zoho только для новых сообщений (не из рассылок)
+    // Сообщения из рассылок синхронизируются в messageWorker.ts
+    // Входящие сообщения тоже синхронизируем для полноты истории
+    if (config.zoho.enabled) {
+      zohoService.syncMessage({
+        phone: contact.phone,
+        message: content,
+        direction: 'inbound',
+        timestamp: timestamp,
+        contactName: contact.name,
+        chatId: chat.id, // Добавляем chatId для создания ссылки
+      }).catch((error) => {
+        console.error('Zoho sync error (non-blocking):', error);
+      });
+    }
 
     // Создать уведомление для всех пользователей (или можно фильтровать по ролям)
     // Получаем всех пользователей с ролями admin и manager

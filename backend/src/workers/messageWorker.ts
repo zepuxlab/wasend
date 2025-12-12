@@ -2,6 +2,8 @@ import { Worker, Job } from 'bullmq';
 import { db } from '../services/supabase';
 import { metaApi, buildTemplateComponents } from '../services/metaApi';
 import { connection } from '../services/queue';
+import { config } from '../config/env';
+import { zohoService } from '../services/zoho';
 
 interface MessageJobData {
   recipientId: string;
@@ -95,19 +97,37 @@ export const messageWorker = new Worker<MessageJobData>(
       // 9. Обновить счетчики кампании
       await db.campaigns.increment(campaignId, 'sent_count');
 
-      // 10. Записать в лог
-      await db.activityLogs.create({
-        campaign_id: campaignId,
-        contact_id: contact.id,
-        action: 'message_sent',
-        phone: contact.phone,
-        details: {
-          message_type: 'template',
-          template_category: template.category,
-        },
-      });
+                  // 10. Записать в лог
+                  await db.activityLogs.create({
+                    campaign_id: campaignId,
+                    contact_id: contact.id,
+                    action: 'message_sent',
+                    phone: contact.phone,
+                    details: {
+                      message_type: 'template',
+                      template_category: template.category,
+                    },
+                  });
 
-      return { success: true, messageId: response.messages?.[0]?.id };
+                  // 11. Синхронизировать с Zoho (асинхронно, не блокируем основной поток)
+                  // Это сообщение из рассылки - добавляем в Zoho для истории
+                  if (config.zoho.enabled) {
+                    zohoService.syncMessage({
+                      phone: contact.phone,
+                      message: template.preview_text || template.name,
+                      direction: 'outbound',
+                      timestamp: now,
+                      contactName: contact.name,
+                      isTemplate: true,
+                      templateName: template.name,
+                      messageStatus: 'sent',
+                      chatId: chat.id, // Добавляем chatId для создания ссылки на диалог
+                    }).catch((error) => {
+                      console.error('Zoho sync error (non-blocking):', error);
+                    });
+                  }
+
+                  return { success: true, messageId: response.messages?.[0]?.id };
     } catch (error: any) {
       const errorMessage = error.message || 'Unknown error';
       const errorCode = error.response?.data?.error?.code;
