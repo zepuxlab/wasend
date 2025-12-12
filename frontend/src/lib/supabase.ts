@@ -48,10 +48,19 @@ export async function initSupabase(): Promise<boolean> {
       const config = await fetchConfig();
       if (config && config.url && config.anonKey) {
         supabaseConfig = config;
+        // Get the correct redirect URL based on environment
+        const getRedirectUrl = () => {
+          if (import.meta.env.PROD) {
+            return `${window.location.origin}/wasend/auth`;
+          }
+          return `${window.location.origin}/auth`;
+        };
+
         supabaseClient = createClient(config.url, config.anonKey, {
           auth: {
             persistSession: true,
             autoRefreshToken: true,
+            redirectTo: getRedirectUrl(),
           },
         });
       }

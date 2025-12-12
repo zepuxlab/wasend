@@ -85,10 +85,14 @@ export default function Auth() {
 
     setIsLoading(true);
     
+    // Get the correct redirect URL
+    const redirectUrl = window.location.origin + (window.location.pathname.startsWith('/wasend') ? '/wasend/auth' : '/auth');
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
+        emailRedirectTo: redirectUrl,
         data: {
           full_name: fullName || email.split('@')[0],
         }
