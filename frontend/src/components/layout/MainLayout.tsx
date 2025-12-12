@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from "react-router-dom";
+import { Outlet, Navigate, useLocation } from "react-router-dom";
 import { AppSidebar } from "./AppSidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { useSupabase } from "@/hooks/useSupabase";
@@ -6,7 +6,8 @@ import { Loader2 } from "lucide-react";
 
 export function MainLayout() {
   const { isConfigured } = useSupabase();
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, isUser } = useAuth();
+  const location = useLocation();
 
   // Show loading while checking auth
   if (isLoading && isConfigured) {
@@ -20,6 +21,12 @@ export function MainLayout() {
   // Redirect to auth if not logged in (only if DB is configured)
   if (isConfigured && !user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // Для роли user разрешены только Dashboard (/) и Chats (/chats)
+  const allowedPathsForUser = ['/', '/chats'];
+  if (isUser && !allowedPathsForUser.includes(location.pathname)) {
+    return <Navigate to="/" replace />;
   }
 
   return (
