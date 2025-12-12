@@ -25,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { EmptyState } from "@/components/ui/empty-state";
 import { toast } from "@/hooks/use-toast";
 import { formatAed, formatMessageCost, getMessageCostAed } from "@/lib/currency";
+import { contactsBackendApi } from "@/lib/backend-api";
 
 const steps = [
   { id: 1, name: "Template", icon: MessageSquare },
@@ -43,7 +44,7 @@ export default function CreateBroadcast() {
     navigate("/broadcasts");
     return null;
   }
-  const { data: contacts } = useContacts();
+  const { data: contacts, refetch: refetchContacts } = useContacts();
   const { data: contactLists } = useContactLists();
   const createCampaign = useCreateCampaignBackend();
 
@@ -141,19 +142,58 @@ export default function CreateBroadcast() {
           return;
         }
         
-        // Находим контакты по номерам телефонов
+        // Нормализуем номера для поиска
+        const normalizedNumbers = numbers.map(n => n.replace(/[^\d+]/g, ''));
+        
+        // Находим существующие контакты по номерам телефонов
         const foundContacts = contacts?.filter((c: any) => {
           const normalizedPhone = c.phone.replace(/[^\d+]/g, '');
-          return numbers.some(n => {
-            const normalizedNumber = n.replace(/[^\d+]/g, '');
-            return normalizedPhone === normalizedNumber || 
-                   normalizedPhone.endsWith(normalizedNumber) ||
-                   normalizedNumber.endsWith(normalizedPhone);
+          return normalizedNumbers.some(n => {
+            return normalizedPhone === n || 
+                   normalizedPhone.endsWith(n) ||
+                   n.endsWith(normalizedPhone);
           });
         }) || [];
         
+        // Находим номера, для которых контакты не найдены
+        const foundPhones = new Set(foundContacts.map((c: any) => c.phone.replace(/[^\d+]/g, '')));
+        const missingNumbers = normalizedNumbers.filter(n => {
+          return !Array.from(foundPhones).some(fp => 
+            fp === n || fp.endsWith(n) || n.endsWith(fp)
+          );
+        });
+        
+        // Создаем контакты для номеров, которых нет в базе
+        if (missingNumbers.length > 0) {
+          try {
+            const newContacts = await Promise.all(
+              missingNumbers.map(phone => 
+                contactsBackendApi.create({
+                  phone: phone.startsWith('+') ? phone : `+${phone}`,
+                  name: undefined,
+                  opt_in: true, // Автоматически созданные контакты для рассылки имеют opt_in: true
+                })
+              )
+            );
+            // Добавляем новые контакты к найденным
+            foundContacts.push(...newContacts);
+            // Обновляем список контактов
+            await refetchContacts();
+          } catch (createError: any) {
+            console.error('Error creating contacts:', createError);
+            toast({ 
+              title: "Error", 
+              description: `Failed to create contacts: ${createError.message}`, 
+              variant: "destructive" 
+            });
+            setIsSubmitting(false);
+            return;
+          }
+        }
+        
+        // Фильтруем только opt-in контакты и получаем их ID
         contactIds = foundContacts
-          .filter((c: any) => c.opt_in)
+          .filter((c: any) => c.opt_in === true)
           .map((c: any) => c.id);
         
         if (contactIds.length === 0) {
