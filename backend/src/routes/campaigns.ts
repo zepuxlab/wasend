@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { db } from '../services/supabase';
+import { db, dbSupabase } from '../services/supabase';
 import { messageQueue, queueUtils } from '../services/queue';
 import { z } from 'zod';
 
@@ -287,6 +287,7 @@ router.delete(
 );
 
 // POST /api/campaigns/:id/start - Запустить кампанию
+// Оптимизировано для больших кампаний: возвращает ответ сразу, обработка асинхронная
 router.post(
   '/:id/start',
   async (req: Request, res: Response, next: NextFunction) => {
@@ -302,81 +303,168 @@ router.post(
         });
       }
 
-      // Получить всех получателей со статусом pending
+      // Получить количество получателей для быстрого ответа
       const recipients = await db.campaignRecipients.findByStatus(id, 'pending');
+      const totalRecipients = recipients.length;
 
-      // ВАЛИДАЦИЯ: Проверить opt-in перед добавлением в очередь
-      let validRecipients = 0;
-      let skippedRecipients = 0;
-
-      for (const recipient of recipients) {
-        // Получить контакт для проверки opt_in
-        const contact = await db.contacts.findById(recipient.contact_id);
-        
-        // Пропустить контакты без opt_in (защита от бана)
-        if (!contact.opt_in) {
-          await db.campaignRecipients.update(recipient.id, {
-            status: 'failed',
-            error_message: 'Contact has not opted in',
-          });
-          skippedRecipients++;
-          continue;
-        }
-
-        // Валидация формата телефона
-        if (!contact.phone || !/^\+?[1-9]\d{1,14}$/.test(contact.phone.replace(/\s/g, ''))) {
-          await db.campaignRecipients.update(recipient.id, {
-            status: 'failed',
-            error_message: 'Invalid phone number format',
-          });
-          skippedRecipients++;
-          continue;
-        }
-
-        // Создать задачу в очереди с задержкой для соблюдения rate limits
-        const delay = validRecipients * (campaign.rate_limit_delay_seconds * 1000) / campaign.rate_limit_per_batch;
-        
-        await messageQueue.add(
-          'send-message',
-          {
-            recipientId: recipient.id,
-            campaignId: id,
-          },
-          {
-            delay: Math.floor(delay),
-            attempts: 3,
-            backoff: {
-              type: 'exponential',
-              delay: 5000, // 5 секунд между попытками
-            },
-          }
-        );
-
-        // Обновить статус на queued
-        await db.campaignRecipients.update(recipient.id, {
-          status: 'queued',
-        });
-
-        validRecipients++;
-      }
-
-      // Обновить статус кампании
+      // Обновить статус кампании сразу
       await db.campaigns.update(id, {
         status: 'running',
         started_at: new Date().toISOString(),
       });
 
-      res.json({ 
-        message: 'Campaign started', 
-        queued: validRecipients,
-        skipped: skippedRecipients,
-        total: recipients.length,
+      // Вернуть ответ сразу (202 Accepted - запрос принят, обрабатывается)
+      res.status(202).json({ 
+        message: 'Campaign is starting...', 
+        total: totalRecipients,
+        status: 'processing',
+      });
+
+      // Обработать получателей асинхронно (не блокируем ответ)
+      processCampaignStart(id, campaign, recipients).catch((error) => {
+        console.error('Error processing campaign start:', error);
+        // Обновить статус кампании на failed при ошибке
+        db.campaigns.update(id, {
+          status: 'failed',
+          error_message: error.message || 'Failed to start campaign',
+        }).catch(console.error);
       });
     } catch (error: any) {
       return next(error);
     }
   }
 );
+
+// Асинхронная функция для обработки старта кампании
+async function processCampaignStart(
+  campaignId: string,
+  campaign: any,
+  recipients: any[]
+) {
+  const BATCH_SIZE = 100; // Обрабатываем батчами по 100 получателей
+  let validRecipients = 0;
+  let skippedRecipients = 0;
+
+  // Обрабатываем батчами
+  for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+    const batch = recipients.slice(i, i + BATCH_SIZE);
+    
+    // Получить все контакты батча одним запросом
+    const contactIds = batch.map((r: any) => r.contact_id);
+    const { data: contacts, error: contactsError } = await dbSupabase
+      .from('contacts')
+      .select('id, phone, opt_in')
+      .in('id', contactIds);
+
+    if (contactsError) {
+      console.error('Error fetching contacts batch:', contactsError);
+      continue;
+    }
+
+    // Создать Map для быстрого поиска контактов
+    const contactsMap = new Map((contacts || []).map((c: any) => [c.id, c]));
+
+    // Подготовить задачи для очереди и обновления статусов
+    const queueJobs: any[] = [];
+    const validRecipientIds: string[] = [];
+    const failedRecipientUpdates: any[] = [];
+
+    for (const recipient of batch) {
+      const contact = contactsMap.get(recipient.contact_id);
+      
+      if (!contact) {
+        failedRecipientUpdates.push({
+          id: recipient.id,
+          status: 'failed',
+          error_message: 'Contact not found',
+        });
+        skippedRecipients++;
+        continue;
+      }
+
+      // Пропустить контакты без opt_in
+      if (!(contact as any).opt_in) {
+        failedRecipientUpdates.push({
+          id: recipient.id,
+          status: 'failed',
+          error_message: 'Contact has not opted in',
+        });
+        skippedRecipients++;
+        continue;
+      }
+
+      // Валидация формата телефона
+      const contactPhone = (contact as any).phone;
+      if (!contactPhone || !/^\+?[1-9]\d{1,14}$/.test(contactPhone.replace(/\s/g, ''))) {
+        failedRecipientUpdates.push({
+          id: recipient.id,
+          status: 'failed',
+          error_message: 'Invalid phone number format',
+        });
+        skippedRecipients++;
+        continue;
+      }
+
+      // Вычислить задержку для соблюдения rate limits
+      const delay = validRecipients * (campaign.rate_limit_delay_seconds * 1000) / campaign.rate_limit_per_batch;
+      
+      // Добавить задачу в очередь
+      queueJobs.push({
+        name: 'send-message',
+        data: {
+          recipientId: recipient.id,
+          campaignId: campaignId,
+        },
+        opts: {
+          delay: Math.floor(delay),
+          attempts: 3,
+          backoff: {
+            type: 'exponential',
+            delay: 5000,
+          },
+        },
+      });
+
+      validRecipientIds.push(recipient.id);
+      validRecipients++;
+    }
+
+    // Bulk операции: добавить задачи в очередь и обновить статусы
+    try {
+      // Добавить все задачи в очередь параллельно
+      await Promise.all(
+        queueJobs.map(job => messageQueue.add(job.name, job.data, job.opts))
+      );
+
+      // Bulk update статусов на queued для валидных получателей
+      if (validRecipientIds.length > 0) {
+        await dbSupabase
+          .from('campaign_recipients')
+          .update({ status: 'queued' })
+          .in('id', validRecipientIds);
+      }
+
+      // Bulk update статусов на failed для невалидных получателей
+      if (failedRecipientUpdates.length > 0) {
+        // Supabase не поддерживает bulk update с разными значениями напрямую
+        // Обновляем по одному, но это быстрее чем делать все операции последовательно
+        await Promise.all(
+          failedRecipientUpdates.map(update =>
+            db.campaignRecipients.update(update.id, {
+              status: update.status,
+              error_message: update.error_message,
+            })
+          )
+        );
+      }
+    } catch (batchError) {
+      console.error(`Error processing batch ${i / BATCH_SIZE + 1}:`, batchError);
+      // Продолжаем обработку следующих батчей
+    }
+  }
+
+  console.log(`Campaign ${campaignId} started: ${validRecipients} queued, ${skippedRecipients} skipped`);
+}
 
 // POST /api/campaigns/:id/pause - Приостановить кампанию
 router.post(
