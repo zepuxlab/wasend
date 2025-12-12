@@ -153,7 +153,10 @@ export default function Auth() {
               src="https://office.ampriomilano.com/b2b/images/AM_logo_mini.svg" 
               alt="amSendler Logo" 
               className="h-[38px] w-[38px]"
-              style={{ filter: 'brightness(0) saturate(100%) invert(14%) sepia(93%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)' }}
+              style={{ 
+                filter: 'brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)',
+                WebkitFilter: 'brightness(0) saturate(100%) invert(15%) sepia(94%) saturate(1352%) hue-rotate(113deg) brightness(96%) contrast(89%)'
+              }}
             />
             <h1 className="text-2xl font-bold">amSendler</h1>
           </div>
