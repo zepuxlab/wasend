@@ -12,11 +12,7 @@ import {
   CheckCircle,
   RefreshCw,
   XCircle,
-  Database,
-  Server,
-  Webhook,
   MessageSquare,
-  Building2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { settingsBackendApi, ConnectionStatus } from "@/lib/backend-api";
@@ -140,41 +136,7 @@ export default function Settings() {
 
         {/* Connection Status Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Database Status */}
-          <Card className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Database
-                  className={`h-6 w-6 ${
-                    status?.database.connected
-                      ? "text-success"
-                      : "text-destructive"
-                  }`}
-                />
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="font-semibold text-foreground">Database</h3>
-                  <Badge
-                    className={
-                      status?.database.connected
-                        ? "bg-success/10 text-success"
-                        : "bg-destructive/10 text-destructive"
-                    }
-                  >
-                    {status?.database.connected ? "Connected" : "Disconnected"}
-                  </Badge>
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {status?.database.connected
-                    ? "Supabase connection is active"
-                    : "Database connection failed"}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          {/* Backend API Status */}
+          {/* Meta API Status */}
           <Card className="p-6">
             <div className="flex items-start gap-4">
               <div className="p-2 rounded-lg bg-primary/10">
