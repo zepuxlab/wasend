@@ -1,6 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { config } from '../config/env';
-import { db } from '../services/supabase';
+import { db, dbSupabase } from '../services/supabase';
 import { MetaWebhookMessage, MetaWebhookStatus } from '../types';
 
 const router = Router();
@@ -93,7 +93,7 @@ async function handleIncomingMessage(message: MetaWebhookMessage) {
     }
 
     // Сохранить сообщение
-    await db.messages.create({
+    const savedMessage = await db.messages.create({
       chat_id: chat.id,
       direction: 'inbound',
       type: message.type as any,
@@ -101,6 +101,29 @@ async function handleIncomingMessage(message: MetaWebhookMessage) {
       whatsapp_message_id: message.id,
       created_at: timestamp.toISOString(),
     });
+
+    // Создать уведомление для всех пользователей (или можно фильтровать по ролям)
+    // Получаем всех пользователей с ролями admin и manager
+    const { data: users } = await dbSupabase
+      .from('user_roles')
+      .select('user_id')
+      .in('role', ['admin', 'manager']);
+    
+    if (users && users.length > 0) {
+      const contactName = contact.name || contact.phone;
+      for (const user of users) {
+        await db.notifications.create({
+          user_id: user.user_id,
+          chat_id: chat.id,
+          contact_id: contact.id,
+          message_id: savedMessage.id,
+          type: 'new_message',
+          title: `New message from ${contactName}`,
+          message: content.length > 100 ? content.substring(0, 100) + '...' : content,
+          read: false,
+        });
+      }
+    }
   } catch (error) {
     console.error('Error handling incoming message:', error);
   }

@@ -6,6 +6,9 @@ export const supabase = createClient(
   config.supabase.serviceKey
 );
 
+// Экспортируем supabase для прямого доступа в некоторых местах
+export { supabase as dbSupabase };
+
 // Вспомогательные функции для работы с базой данных
 
 export const db = {
@@ -430,6 +433,68 @@ export const db = {
         .single();
       if (error) throw error;
       return data;
+    },
+  },
+  notifications: {
+    findAll: async (userId?: string, unreadOnly: boolean = false) => {
+      let query = supabase
+        .from('notifications')
+        .select('*, chat:chats(*, contact:contacts(*)), contact:contacts(*), message:messages(*)')
+        .order('created_at', { ascending: false })
+        .limit(50);
+      
+      if (userId) {
+        query = query.eq('user_id', userId);
+      }
+      
+      if (unreadOnly) {
+        query = query.eq('read', false);
+      }
+      
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+    getUnreadCount: async (userId?: string) => {
+      let query = supabase
+        .from('notifications')
+        .select('id', { count: 'exact', head: true })
+        .eq('read', false);
+      
+      if (userId) {
+        query = query.eq('user_id', userId);
+      }
+      
+      const { count, error } = await query;
+      if (error) throw error;
+      return count || 0;
+    },
+    create: async (notification: any) => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .insert(notification)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    markAsRead: async (id: string) => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+    markAllAsRead: async (userId: string) => {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', userId)
+        .eq('read', false);
+      if (error) throw error;
     },
   },
 };

@@ -371,6 +371,69 @@ export const settingsBackendApi = {
 };
 
 // ============================================
+// NOTIFICATIONS API
+// ============================================
+
+export interface Notification {
+  id: string;
+  user_id: string;
+  chat_id: string;
+  contact_id: string;
+  message_id: string;
+  type: string;
+  title: string;
+  message: string;
+  read: boolean;
+  created_at: string;
+  chat?: {
+    id: string;
+    contact: {
+      id: string;
+      phone: string;
+      name: string | null;
+    };
+  };
+  contact?: {
+    id: string;
+    phone: string;
+    name: string | null;
+  };
+}
+
+export const notificationsBackendApi = {
+  /**
+   * GET /api/notifications
+   * Get all notifications
+   */
+  getAll: (unreadOnly?: boolean) =>
+    apiRequest<Notification[]>(`/notifications${unreadOnly ? '?unread_only=true' : ''}`),
+
+  /**
+   * GET /api/notifications/unread-count
+   * Get unread notifications count
+   */
+  getUnreadCount: () => apiRequest<{ count: number }>('/notifications/unread-count'),
+
+  /**
+   * PATCH /api/notifications/:id/read
+   * Mark notification as read
+   */
+  markAsRead: (id: string) =>
+    apiRequest<{ message: string }>(`/notifications/${id}/read`, {
+      method: 'PATCH',
+    }),
+
+  /**
+   * PATCH /api/notifications/read-all
+   * Mark all notifications as read
+   */
+  markAllAsRead: () =>
+    apiRequest<{ message: string }>('/notifications/read-all', {
+      method: 'PATCH',
+    }),
+};
+
+// ============================================
 // TYPES
 // These should match your backend models
 // ============================================

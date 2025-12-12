@@ -18,6 +18,7 @@ import webhookRouter from './routes/webhook';
 import logsRouter from './routes/logs';
 import settingsRouter from './routes/settings';
 import configRouter from './routes/config';
+import notificationsRouter from './routes/notifications';
 
 // Импортировать воркер (чтобы он запустился)
 import './workers/messageWorker';
@@ -49,6 +50,7 @@ app.use('/api/chats', chatsRouter);
 app.use('/api/webhook', webhookRouter);
 app.use('/api/logs', logsRouter);
 app.use('/api/settings', settingsRouter);
+app.use('/api/notifications', notificationsRouter);
 
 // Error handling
 app.use(notFoundHandler);
