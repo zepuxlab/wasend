@@ -61,7 +61,33 @@ async function apiRequest<T>(
       throw new Error(error.message || `API Error: ${response.status}`);
     }
 
-    return response.json();
+    // Handle 204 No Content (empty response for DELETE requests)
+    if (response.status === 204 || response.status === 201) {
+      // Check if response has content
+      const contentType = response.headers.get('content-type');
+      const contentLength = response.headers.get('content-length');
+      
+      // If no content or empty, return empty object/void
+      if (!contentType?.includes('application/json') || contentLength === '0') {
+        return {} as T;
+      }
+    }
+
+    // Try to parse JSON, but handle empty responses gracefully
+    const text = await response.text();
+    if (!text || text.trim() === '') {
+      return {} as T;
+    }
+    
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      // If JSON parsing fails but status is OK, return empty object
+      if (response.ok) {
+        return {} as T;
+      }
+      throw new Error('Invalid JSON response from server');
+    }
   } catch (error: any) {
     clearTimeout(timeoutId); // Ensure timeout is cleared on error
     

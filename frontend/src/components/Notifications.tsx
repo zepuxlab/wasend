@@ -29,10 +29,13 @@ export function Notifications() {
         notificationsBackendApi.getAll(true), // Только непрочитанные
         notificationsBackendApi.getUnreadCount(),
       ]);
-      setNotifications(allNotifications);
-      setUnreadCount(countData.count);
+      setNotifications(Array.isArray(allNotifications) ? allNotifications : []);
+      setUnreadCount(countData?.count || 0);
     } catch (error: any) {
       console.error('Failed to fetch notifications:', error);
+      // Устанавливаем пустые значения при ошибке, чтобы не было белого экрана
+      setNotifications([]);
+      setUnreadCount(0);
     } finally {
       setIsLoading(false);
     }
