@@ -110,13 +110,74 @@ export default function CreateBroadcast() {
 
       if (formData.recipientMethod === "all") {
         contactIds = contacts?.filter((c: any) => c.opt_in)?.map((c: any) => c.id) || [];
-      } else if (formData.recipientMethod === "list" && formData.selectedListId) {
+        if (contactIds.length === 0) {
+          toast({ 
+            title: "Error", 
+            description: "No opt-in contacts found", 
+            variant: "destructive" 
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      } else if (formData.recipientMethod === "list") {
+        if (!formData.selectedListId) {
+          toast({ 
+            title: "Error", 
+            description: "Please select a contact list", 
+            variant: "destructive" 
+          });
+          setIsSubmitting(false);
+          return;
+        }
         contactListId = formData.selectedListId;
       } else if (formData.recipientMethod === "paste") {
-        // Для вставленных номеров нужно создать контакты или найти их
-        const numbers = formData.numbers.split("\n").filter(Boolean);
-        // Пока используем contact_ids, но нужно будет обработать номера
-        contactIds = []; // TODO: обработать вставленные номера
+        // Для вставленных номеров находим существующие контакты по номерам
+        const numbers = formData.numbers.split("\n").filter(Boolean).map(n => n.trim());
+        if (numbers.length === 0) {
+          toast({ 
+            title: "Error", 
+            description: "Please enter at least one phone number", 
+            variant: "destructive" 
+          });
+          setIsSubmitting(false);
+          return;
+        }
+        
+        // Находим контакты по номерам телефонов
+        const foundContacts = contacts?.filter((c: any) => {
+          const normalizedPhone = c.phone.replace(/[^\d+]/g, '');
+          return numbers.some(n => {
+            const normalizedNumber = n.replace(/[^\d+]/g, '');
+            return normalizedPhone === normalizedNumber || 
+                   normalizedPhone.endsWith(normalizedNumber) ||
+                   normalizedNumber.endsWith(normalizedPhone);
+          });
+        }) || [];
+        
+        contactIds = foundContacts
+          .filter((c: any) => c.opt_in)
+          .map((c: any) => c.id);
+        
+        if (contactIds.length === 0) {
+          toast({ 
+            title: "Error", 
+            description: "No opt-in contacts found for the entered phone numbers", 
+            variant: "destructive" 
+          });
+          setIsSubmitting(false);
+          return;
+        }
+      }
+
+      // Проверка: должен быть хотя бы один способ выбора контактов
+      if (!contactListId && contactIds.length === 0 && !contactTags) {
+        toast({ 
+          title: "Error", 
+          description: "Please select contacts using one of the methods: all contacts, contact list, or paste phone numbers", 
+          variant: "destructive" 
+        });
+        setIsSubmitting(false);
+        return;
       }
 
       const campaign = await createCampaign.mutateAsync({
@@ -130,7 +191,7 @@ export default function CreateBroadcast() {
         },
         ...(contactListId && { contact_list_id: contactListId }),
         ...(contactIds.length > 0 && { contact_ids: contactIds }),
-        ...(contactTags && { contact_tags: contactTags }),
+        ...(contactTags && contactTags.length > 0 && { contact_tags: contactTags }),
       });
 
       toast({ title: "Success", description: "Campaign created" });

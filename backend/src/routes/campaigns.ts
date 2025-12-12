@@ -20,7 +20,20 @@ const createCampaignSchema = z.object({
     hourly_cap: z.number().int().positive().optional(),
     daily_cap: z.number().int().positive().optional(),
   }),
-});
+}).refine(
+  (data) => {
+    // Должен быть указан хотя бы один способ выбора контактов
+    return (
+      (data.contact_list_id !== undefined && data.contact_list_id !== null) ||
+      (data.contact_ids !== undefined && data.contact_ids !== null && data.contact_ids.length > 0) ||
+      (data.contact_tags !== undefined && data.contact_tags !== null && data.contact_tags.length > 0)
+    );
+  },
+  {
+    message: 'Must provide contact_list_id, contact_ids, or contact_tags',
+    path: ['contact_list_id'], // Указываем путь для ошибки
+  }
+);
 
 // GET /api/campaigns - Получить все кампании
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
