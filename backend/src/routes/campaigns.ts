@@ -218,14 +218,19 @@ router.delete(
       const { id } = req.params;
       const campaign = await db.campaigns.findById(id);
 
-      if (!['draft', 'stopped'].includes(campaign.status)) {
-        return res.status(400).json({
-          error: true,
-          message: 'Can only delete campaigns in draft or stopped status',
-          code: 'CAMPAIGN_INVALID_STATUS',
+      // Если кампания запущена или на паузе, сначала останавливаем её
+      if (campaign.status === 'running' || campaign.status === 'paused') {
+        // Остановить кампанию
+        await db.campaigns.update(id, {
+          status: 'stopped',
         });
+
+        // Очистить очередь от задач этой кампании
+        const { queueUtils } = await import('../services/queue');
+        await queueUtils.clean(id);
       }
 
+      // Удалить кампанию (теперь она в статусе stopped или уже была в draft/stopped/completed/failed)
       await db.campaigns.delete(id);
       res.status(204).send();
     } catch (error: any) {
