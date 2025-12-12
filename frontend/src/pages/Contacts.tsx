@@ -360,10 +360,11 @@ export default function Contacts() {
                 </div>
               </DialogContent>
             </Dialog>
+            </div>
           )}
 
-            {/* Import CSV Dialog */}
-            {!isUser && (
+          {/* Import CSV Dialog */}
+          {!isUser && (
             <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
               <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
@@ -452,7 +453,7 @@ export default function Contacts() {
                 )}
               </DialogContent>
             </Dialog>
-          </div>
+          )}
         </div>
 
         {/* Stats */}
