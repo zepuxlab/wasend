@@ -22,16 +22,26 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     const chats = await db.chats.findAll({ status });
     
     // Добавить can_reply для каждого чата
+    // can_reply = окно не истекло И есть входящие сообщения (service-окно)
     const now = new Date();
-    const chatsWithCanReply = chats.map((chat: any) => {
-      const canReply = chat.reply_window_expires_at 
-        ? new Date(chat.reply_window_expires_at) > now
-        : false;
-      return {
-        ...chat,
-        can_reply: canReply,
-      };
-    });
+    const chatsWithCanReply = await Promise.all(
+      chats.map(async (chat: any) => {
+        // Проверить наличие входящих сообщений
+        const messages = await db.messages.findByChatId(chat.id);
+        const hasInboundMessages = messages.some(
+          (msg: any) => msg.direction === 'inbound'
+        );
+        
+        const canReply = chat.reply_window_expires_at 
+          ? new Date(chat.reply_window_expires_at) > now && hasInboundMessages
+          : false;
+        
+        return {
+          ...chat,
+          can_reply: canReply,
+        };
+      })
+    );
     
     res.json(chatsWithCanReply);
   } catch (error: any) {
@@ -64,10 +74,17 @@ router.get('/:id', async (req: Request, res: Response, next: NextFunction) => {
       }
     }
     
-    // Вычислить can_reply на основе reply_window_expires_at
+    // Вычислить can_reply: окно не истекло И есть входящие сообщения (service-окно)
+    // После шаблона окно "платное" - нельзя отправлять текстовые сообщения
+    // Только после ответа пользователя окно становится "бесплатным"
+    const messages = await db.messages.findByChatId(id);
+    const hasInboundMessages = messages.some(
+      (msg: any) => msg.direction === 'inbound'
+    );
+    
     const now = new Date();
     const canReply = chat.reply_window_expires_at 
-      ? new Date(chat.reply_window_expires_at) > now
+      ? new Date(chat.reply_window_expires_at) > now && hasInboundMessages
       : false;
     
     res.json({
@@ -120,6 +137,22 @@ router.post(
             code: 'REPLY_WINDOW_EXPIRED',
           });
         }
+      }
+
+      // ВАЖНО: Проверить, есть ли входящие сообщения от пользователя
+      // После отправки шаблона окно "платное" - нельзя отправлять текстовые сообщения
+      // Только после ответа пользователя окно становится "бесплатным" (service-окно)
+      const messages = await db.messages.findByChatId(id);
+      const hasInboundMessages = messages.some(
+        (msg: any) => msg.direction === 'inbound'
+      );
+
+      if (!hasInboundMessages) {
+        return res.status(400).json({
+          error: true,
+          message: 'Cannot send text message. User has not replied. Use a template to start conversation.',
+          code: 'NO_USER_REPLY',
+        });
       }
 
       const contact = await db.contacts.findById(chat.contact_id);
