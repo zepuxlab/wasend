@@ -1,0 +1,24 @@
+// PM2 ecosystem config for production
+module.exports = {
+  apps: [
+    {
+      name: 'wasendler-backend',
+      script: './backend/dist/index.js',
+      cwd: '/home/amprio/officeamprio/wasendler',
+      instances: 1,
+      exec_mode: 'fork',
+      env: {
+        NODE_ENV: 'production',
+        PORT: 3001,
+      },
+      error_file: './logs/backend-error.log',
+      out_file: './logs/backend-out.log',
+      log_date_format: 'YYYY-MM-DD HH:mm:ss Z',
+      merge_logs: true,
+      autorestart: true,
+      max_memory_restart: '500M',
+      watch: false,
+    },
+  ],
+};
+
