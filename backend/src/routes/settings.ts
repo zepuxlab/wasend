@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { metaApi } from '../services/metaApi';
 import { config } from '../config/env';
-import { supabase } from '../services/supabase';
+import { supabase, db } from '../services/supabase';
 
 const router = Router();
 
