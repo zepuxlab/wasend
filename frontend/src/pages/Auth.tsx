@@ -85,11 +85,11 @@ export default function Auth() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-2xl p-6">
           <div className="text-center mb-6 pt-4">
-            <div className="flex items-center justify-center gap-2 mb-2">
+            <div className="flex flex-col items-center justify-center mb-2">
               <img 
                 src={import.meta.env.BASE_URL + "relayne-logo.svg"} 
                 alt="Relayne Logo" 
-                className="h-[48px] w-[48px]"
+                className="h-[48px] w-[48px] mb-3"
               />
               <h1 className="text-2xl font-bold">Zoho OAuth Authorization Code</h1>
             </div>
@@ -293,11 +293,11 @@ export default function Auth() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md p-6">
         <div className="text-center mb-6 pt-4">
-          <div className="flex items-center justify-center gap-2 mb-2">
+          <div className="flex flex-col items-center justify-center mb-2">
             <img 
               src={import.meta.env.BASE_URL + "relayne-logo.svg"} 
               alt="Relayne Logo" 
-              className="h-[48px] w-[48px]"
+              className="h-[48px] w-[48px] mb-3"
             />
             <h1 className="text-2xl font-bold">Relayne</h1>
           </div>
