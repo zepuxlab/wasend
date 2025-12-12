@@ -220,6 +220,13 @@ export const metaApi = new MetaApiService();
 
 /**
  * Построить components для шаблона из переменных
+ * Meta API автоматически обрабатывает:
+ * - HEADER с изображениями (format: IMAGE, VIDEO, DOCUMENT) - статическое изображение из шаблона
+ * - BODY с текстовыми переменными ({{1}}, {{2}}, ...)
+ * - BUTTONS с URL (type: URL) - если есть динамические переменные в URL
+ * 
+ * ВАЖНО: Meta автоматически отправляет изображение и кнопки из шаблона, если они там определены.
+ * Нам нужно только передать переменные для текстовых частей (HEADER text, BODY, URL в кнопках).
  */
 export function buildTemplateComponents(
   templateComponents: any[],
@@ -228,9 +235,83 @@ export function buildTemplateComponents(
   const components: any[] = [];
 
   for (const component of templateComponents) {
-    if (component.type === 'BODY' || component.type === 'HEADER') {
+    // Обработка HEADER компонента
+    if (component.type === 'HEADER') {
       const componentData: any = {
-        type: component.type.toLowerCase(),
+        type: 'header',
+      };
+
+      // HEADER может быть текстовым или с изображением/видео/документом
+      if (component.format === 'IMAGE' || component.format === 'VIDEO' || component.format === 'DOCUMENT') {
+        // Для HEADER с медиа-файлами: Meta использует статическое изображение из шаблона
+        // Если есть переменные в примере (например, для текста поверх изображения), обрабатываем их
+        const example = component.example?.header_handle?.[0] || component.example?.header_text?.[0] || '';
+        if (example && example.match(/\{\{(\d+)\}\}/)) {
+          const matches = example.match(/\{\{(\d+)\}\}/g) || [];
+          if (matches.length > 0) {
+            const parameters: any[] = [];
+            const sortedMatches = matches.sort((a: string, b: string) => {
+              const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+              const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+              return numA - numB;
+            });
+            
+            for (const match of sortedMatches) {
+              const varNum = match.match(/\d+/)?.[0];
+              if (varNum) {
+                const placeholder = `{{${varNum}}}`;
+                const value = variables[placeholder] || '';
+                parameters.push({
+                  type: 'text',
+                  text: value || '',
+                });
+              }
+            }
+            
+            if (parameters.length > 0) {
+              componentData.parameters = parameters;
+              components.push(componentData);
+            }
+          }
+        }
+        // Если нет переменных, Meta автоматически использует изображение из шаблона
+        // Не нужно добавлять компонент в этом случае
+      } else {
+        // Текстовый HEADER
+        const text = component.text || '';
+        const matches = text.match(/\{\{(\d+)\}\}/g) || [];
+        
+        if (matches.length > 0) {
+          const parameters: any[] = [];
+          const sortedMatches = matches.sort((a: string, b: string) => {
+            const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+            const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+            return numA - numB;
+          });
+          
+          for (const match of sortedMatches) {
+            const varNum = match.match(/\d+/)?.[0];
+            if (varNum) {
+              const placeholder = `{{${varNum}}}`;
+              const value = variables[placeholder] || '';
+              parameters.push({
+                type: 'text',
+                text: value || '',
+              });
+            }
+          }
+          
+          if (parameters.length > 0) {
+            componentData.parameters = parameters;
+            components.push(componentData);
+          }
+        }
+      }
+    }
+    // Обработка BODY компонента
+    else if (component.type === 'BODY') {
+      const componentData: any = {
+        type: 'body',
       };
 
       // Извлечь переменные из текста компонента (например, {{1}}, {{2}})
@@ -241,7 +322,6 @@ export function buildTemplateComponents(
         const parameters: any[] = [];
         
         // Важно: параметры должны быть в порядке переменных ({{1}}, {{2}}, ...)
-        // Сортируем matches по номеру переменной
         const sortedMatches = matches.sort((a: string, b: string) => {
           const numA = parseInt(a.match(/\d+/)?.[0] || '0');
           const numB = parseInt(b.match(/\d+/)?.[0] || '0');
@@ -249,30 +329,68 @@ export function buildTemplateComponents(
         });
         
         for (const match of sortedMatches) {
-          // Извлечь номер переменной (например, "1" из "{{1}}")
           const varNum = match.match(/\d+/)?.[0];
           if (varNum) {
             const placeholder = `{{${varNum}}}`;
             const value = variables[placeholder] || '';
             
-            // Добавляем параметр даже если значение пустое (Meta может требовать все параметры)
             parameters.push({
               type: 'text',
-              text: value || '', // Пустая строка если переменная не найдена
+              text: value || '',
             });
           }
         }
 
-        // Добавляем компонент только если есть параметры
-        // Meta требует, чтобы все переменные в шаблоне были заполнены
         if (parameters.length > 0) {
           componentData.parameters = parameters;
           components.push(componentData);
         }
       }
-    } else if (component.type === 'BUTTONS') {
-      // Обработка кнопок в шаблонах (если нужно)
-      // Пока не реализовано, но можно добавить при необходимости
+    }
+    // Обработка BUTTONS компонента
+    else if (component.type === 'BUTTONS') {
+      // Meta API автоматически обрабатывает кнопки с URL из шаблона
+      // Если в шаблоне есть динамические URL (с переменными типа {{1}}), обрабатываем их
+      const buttons = component.buttons || [];
+      
+      for (const button of buttons) {
+        if (button.type === 'URL' && button.url) {
+          // Проверяем, есть ли переменные в URL (например, https://example.com/{{1}})
+          const urlMatches = button.url.match(/\{\{(\d+)\}\}/g) || [];
+          if (urlMatches.length > 0) {
+            // Если есть переменные, создаем компонент для кнопки
+            const urlParameters: any[] = [];
+            const sortedMatches = urlMatches.sort((a: string, b: string) => {
+              const numA = parseInt(a.match(/\d+/)?.[0] || '0');
+              const numB = parseInt(b.match(/\d+/)?.[0] || '0');
+              return numA - numB;
+            });
+            
+            for (const match of sortedMatches) {
+              const varNum = match.match(/\d+/)?.[0];
+              if (varNum) {
+                const placeholder = `{{${varNum}}}`;
+                const value = variables[placeholder] || '';
+                urlParameters.push({
+                  type: 'text',
+                  text: value || '',
+                });
+              }
+            }
+            
+            // Добавляем компонент для кнопки с динамическим URL
+            if (urlParameters.length > 0) {
+              components.push({
+                type: 'button',
+                sub_type: 'url',
+                index: button.index || buttons.indexOf(button),
+                parameters: urlParameters,
+              });
+            }
+          }
+          // Если URL статический (без переменных), Meta автоматически использует его из шаблона
+        }
+      }
     }
   }
 

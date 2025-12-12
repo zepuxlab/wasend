@@ -42,11 +42,11 @@ import { toast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 
 // CSV Example for download
-const CSV_EXAMPLE = `phone,name,country,tags,opt_in
-+393331234567,Mario Rossi,IT,"VIP,Newsletter",true
-+393339876543,Giulia Bianchi,IT,Newsletter,true
-+41791234567,Hans Mueller,CH,"VIP,Premium",true
-+393334567890,Luca Verdi,IT,,false`;
+const CSV_EXAMPLE = `phone,name,tags,opt_in
++393331234567,Mario Rossi,"VIP,Newsletter",true
++393339876543,Giulia Bianchi,Newsletter,true
++41791234567,Hans Mueller,"VIP,Premium",true
++393334567890,Luca Verdi,,false`;
 
 export default function Contacts() {
   const navigate = useNavigate();
@@ -114,11 +114,17 @@ export default function Contacts() {
     const errors: string[] = [];
     const data: any[] = [];
     
-    // Validate headers
-    if (!headers.includes('phone')) {
-      errors.push('CSV must contain a "phone" column');
-      return { data: [], errors };
-    }
+      // Validate headers
+      if (!headers.includes('phone')) {
+        errors.push('CSV must contain a "phone" column');
+        return { data: [], errors };
+      }
+      
+      // Удаляем country из обработки, если он есть
+      if (headers.includes('country')) {
+        const countryIndex = headers.indexOf('country');
+        headers.splice(countryIndex, 1);
+      }
 
     for (let i = 1; i < lines.length; i++) {
       const values = lines[i].match(/(".*?"|[^",]+)(?=\s*,|\s*$)/g) || [];
@@ -225,11 +231,10 @@ export default function Contacts() {
       return;
     }
 
-    const headers = ['phone', 'name', 'country', 'tags', 'opt_in'];
+    const headers = ['phone', 'name', 'tags', 'opt_in'];
     const rows = contacts.map((c: any) => [
       c.phone,
       c.name || '',
-      c.country || '',
       `"${(c.tags || []).join(',')}"`,
       c.opt_in ? 'true' : 'false'
     ].join(','));
@@ -249,16 +254,6 @@ export default function Contacts() {
     await deleteContact.mutateAsync(id);
   };
 
-  const getCountryFlag = (country: string | null) => {
-    switch (country) {
-      case "IT": return "🇮🇹";
-      case "CH": return "🇨🇭";
-      case "FR": return "🇫🇷";
-      case "DE": return "🇩🇪";
-      case "US": return "🇺🇸";
-      default: return "🌍";
-    }
-  };
 
   if (!isConfigured) {
     return (
@@ -448,7 +443,6 @@ export default function Contacts() {
                           <TableRow>
                             <TableHead>Phone</TableHead>
                             <TableHead>Name</TableHead>
-                            <TableHead>Country</TableHead>
                             <TableHead>Tags</TableHead>
                             <TableHead>Opt-in</TableHead>
                           </TableRow>
@@ -458,7 +452,6 @@ export default function Contacts() {
                             <TableRow key={i}>
                               <TableCell className="font-mono text-sm">{row.phone}</TableCell>
                               <TableCell>{row.name || '—'}</TableCell>
-                              <TableCell>{row.country || '—'}</TableCell>
                               <TableCell>
                                 <div className="flex flex-wrap gap-1">
                                   {row.tags?.map((tag: string) => (
@@ -557,7 +550,6 @@ export default function Contacts() {
                 <TableRow>
                   <TableHead className="w-[180px]">Phone</TableHead>
                   <TableHead>Name</TableHead>
-                  <TableHead>Country</TableHead>
                   <TableHead>Tags</TableHead>
                   <TableHead>Source</TableHead>
                   <TableHead>Opt-in</TableHead>
@@ -572,12 +564,6 @@ export default function Contacts() {
                       {contact.phone}
                     </TableCell>
                     <TableCell>{contact.name || "—"}</TableCell>
-                    <TableCell>
-                      <span className="inline-flex items-center gap-1">
-                        <span className="text-lg">{getCountryFlag(contact.country)}</span>
-                        {contact.country || "—"}
-                      </span>
-                    </TableCell>
                     <TableCell>
                       <div className="flex flex-wrap gap-1">
                         {contact.tags?.map((tag: string) => (

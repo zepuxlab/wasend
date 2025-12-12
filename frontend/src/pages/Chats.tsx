@@ -179,7 +179,7 @@ export default function Chats() {
                   <div className="flex-1 overflow-hidden">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-foreground">
-                        {chat.contact?.name || chat.contact?.phone || "Unknown"}
+                        {chat.contact?.phone || "Unknown"}
                       </span>
                       <span className="text-xs text-muted-foreground">
                         {chat.last_message_at

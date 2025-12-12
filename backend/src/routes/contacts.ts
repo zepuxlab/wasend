@@ -7,7 +7,6 @@ const router = Router();
 const createContactSchema = z.object({
   phone: z.string().min(1),
   name: z.string().optional(),
-  country: z.string().optional(),
   tags: z.array(z.string()).optional(),
   custom_fields: z.record(z.any()).optional(),
   opt_in: z.boolean().default(true),
@@ -18,7 +17,6 @@ const importContactsSchema = z.object({
     z.object({
       phone: z.string().min(1),
       name: z.string().optional(),
-      country: z.string().optional(),
       tags: z.array(z.string()).optional(),
       custom_fields: z.record(z.any()).optional(),
     })
