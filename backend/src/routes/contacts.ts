@@ -93,34 +93,68 @@ router.post(
   async (req: Request, res: Response, next: NextFunction) => {
     try {
       const body = importContactsSchema.parse(req.body);
-      let imported = 0;
-      let skipped = 0;
+      
+      // Подготовить данные для bulk upsert
+      const contactsToUpsert = body.contacts.map((contactData) => ({
+        ...contactData,
+        opt_in: true,
+        source: 'manual', // Импортированные контакты помечаем как 'manual'
+      }));
 
-      for (const contactData of body.contacts) {
-        try {
-          await db.contacts.upsert({
-            ...contactData,
-            opt_in: true,
-            source: 'manual', // Импортированные контакты помечаем как 'manual'
-          });
-          imported++;
-        } catch (error: any) {
-          skipped++;
-          console.error('Failed to import contact:', contactData.phone, error);
+      // Использовать bulk upsert вместо отдельных запросов
+      // Supabase поддерживает upsert массива с onConflict
+      const { data, error } = await dbSupabase
+        .from('contacts')
+        .upsert(contactsToUpsert, { 
+          onConflict: 'phone',
+          ignoreDuplicates: false // Обновлять существующие контакты
+        })
+        .select();
+
+      if (error) {
+        console.error('Bulk import error:', error);
+        // Если bulk не сработал, попробуем батчами
+        const BATCH_SIZE = 100;
+        let imported = 0;
+        let skipped = 0;
+
+        for (let i = 0; i < contactsToUpsert.length; i += BATCH_SIZE) {
+          const batch = contactsToUpsert.slice(i, i + BATCH_SIZE);
+          try {
+            const { error: batchError } = await dbSupabase
+              .from('contacts')
+              .upsert(batch, { onConflict: 'phone' });
+            
+            if (batchError) {
+              console.error(`Batch ${i / BATCH_SIZE + 1} error:`, batchError);
+              skipped += batch.length;
+            } else {
+              imported += batch.length;
+            }
+          } catch (batchErr: any) {
+            console.error(`Batch ${i / BATCH_SIZE + 1} failed:`, batchErr);
+            skipped += batch.length;
+          }
         }
-      }
 
-      res.json({ imported, skipped });
+        res.json({ imported, skipped });
+      } else {
+        // Успешный bulk upsert
+        res.json({ 
+          imported: data?.length || contactsToUpsert.length, 
+          skipped: 0 
+        });
+      }
     } catch (error: any) {
       if (error instanceof z.ZodError) {
         return res.status(400).json({
           error: true,
           message: 'Validation error',
           code: 'VALIDATION_ERROR',
-        details: error.errors,
-      });
-    }
-    return next(error);
+          details: error.errors,
+        });
+      }
+      return next(error);
     }
   }
 );
