@@ -19,6 +19,11 @@ module.exports = {
       autorestart: true,
       max_memory_restart: '500M',
       watch: false,
+      // Опции для небуферизованного вывода в реальном времени
+      disable_logs: false,
+      log_type: 'json',
+      // Отключить буферизацию для немедленного вывода
+      kill_timeout: 5000,
     },
   ],
 };
