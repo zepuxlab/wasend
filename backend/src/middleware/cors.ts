@@ -5,6 +5,7 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:3000',
   'http://localhost:8080', // Vite dev server порт
+  'https://office.ampriomilano.com', // Production domain
   process.env.ADMIN_PANEL_URL,
 ].filter(Boolean) as string[];
 
