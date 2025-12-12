@@ -205,7 +205,16 @@ class ZohoService {
       );
 
       if (response.data?.data && response.data.data.length > 0) {
-        return response.data.data[0];
+        const lead = response.data.data[0];
+        // Zoho возвращает объект с details, нужно извлечь id правильно
+        const leadId = lead.details?.id || lead.id || lead.Id || String(lead.id);
+        return {
+          id: leadId,
+          Phone: lead.Phone || lead.details?.Phone,
+          Last_Name: lead.Last_Name || lead.details?.Last_Name,
+          First_Name: lead.First_Name || lead.details?.First_Name,
+          Email: lead.Email || lead.details?.Email,
+        };
       }
 
       return null;
@@ -321,8 +330,14 @@ class ZohoService {
       noteContent += `\n\n💬 Open in Zoho: ${zohoChatUrl}`;
 
       // Используем axios напрямую с полным URL
+      // Zoho API для Notes требует правильный формат leadId
+      // Убеждаемся, что leadId - это строка
+      const cleanLeadId = String(leadId).trim();
+      
+      console.log('Zoho: Adding note to lead:', cleanLeadId);
+      
       const response = await axios.post(
-        `${config.zoho.apiDomain}/crm/v2/Leads/${leadId}/Notes`,
+        `${config.zoho.apiDomain}/crm/v2/Leads/${cleanLeadId}/Notes`,
         {
           data: [
             {
