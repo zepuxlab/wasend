@@ -48,7 +48,7 @@
    - Замените `{YOUR_REDIRECT_URI}` на ваш Redirect URI (должен точно совпадать с тем, что указали при создании приложения)
    - Полный URL будет выглядеть так:
    ```
-   https://accounts.zoho.com/oauth/v2/auth?scope=ZohoCRM.modules.leads.ALL,ZohoCRM.modules.contacts.ALL,ZohoCRM.modules.activities.ALL,ZohoCRM.modules.notes.ALL&client_id=1000.XXXXXXXXXX&response_type=code&access_type=offline&redirect_uri=https://office.ampriomilano.com/wasend/auth
+   https://accounts.zoho.com/oauth/v2/auth?scope=ZohoCRM.modules.leads.ALL,ZohoCRM.modules.contacts.ALL,ZohoCRM.modules.activities.ALL,ZohoCRM.modules.notes.ALL&client_id=1000.IRUUBHGH2QXE1UVJ1LES3T4PAN9O8A&response_type=code&access_type=offline&redirect_uri=https://office.ampriomilano.com/wasend/auth
    ```
    - ⚠️ **Scopes уже включены в URL** - это разрешения, которые нужны для работы интеграции
 
@@ -68,11 +68,16 @@
 
 5. **Обменяйте Code на Refresh Token:**
    
+   ⚠️ **ВАЖНО:** 
+   - Authorization Code действует **только несколько минут** и **одноразовый**
+   - Если получили ошибку `invalid_code` - нужно получить новый код (повторить шаги 2-4)
+   - `redirect_uri` должен **точно совпадать** с тем, что указан в Zoho API Console (включая протокол https://)
+   
    **Вариант 1: Через curl (в терминале):**
    ```bash
    curl -X POST "https://accounts.zoho.com/oauth/v2/token" \
      -d "grant_type=authorization_code" \
-     -d "client_id=ВАШ_CLIENT_ID" \
+     -d "client_id=1000.IRUUBHGH2QXE1UVJ1LES3T4PAN9O8A" \
      -d "client_secret=ВАШ_CLIENT_SECRET" \
      -d "redirect_uri=https://office.ampriomilano.com/wasend/auth" \
      -d "code=ВАШ_AUTHORIZATION_CODE"
@@ -84,10 +89,16 @@
    - Headers: `Content-Type: application/x-www-form-urlencoded`
    - Body (form-data или x-www-form-urlencoded):
      - `grant_type`: `authorization_code`
-     - `client_id`: ваш Client ID
+     - `client_id`: `1000.IRUUBHGH2QXE1UVJ1LES3T4PAN9O8A`
      - `client_secret`: ваш Client Secret
-     - `redirect_uri`: `https://office.ampriomilano.com/wasend/auth`
-     - `code`: ваш Authorization Code
+     - `redirect_uri`: `https://office.ampriomilano.com/wasend/auth` (⚠️ должно точно совпадать!)
+     - `code`: ваш Authorization Code (⚠️ скопируйте полностью, он очень длинный)
+   
+   **Если получили ошибку `invalid_code`:**
+   1. Проверьте, что `redirect_uri` точно совпадает с настройками в Zoho API Console
+   2. Убедитесь, что код скопирован полностью (обычно начинается с `1000.` и очень длинный)
+   3. Получите новый код - откройте URL авторизации заново (шаг 2)
+   4. Используйте новый код сразу после получения (не ждите)
 
 6. **Получите Refresh Token:**
    - После выполнения запроса вы получите JSON ответ:

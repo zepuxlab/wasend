@@ -76,15 +76,22 @@ class ZohoService {
 
     // Обновляем токен
     try {
+      // Для refresh token нужно использовать accounts.zoho.com, а не apiDomain
+      const tokenUrl = config.zoho.apiDomain.includes('accounts.zoho') 
+        ? `${config.zoho.apiDomain}/oauth/v2/token`
+        : 'https://accounts.zoho.com/oauth/v2/token';
+      
       const response = await axios.post(
-        `${config.zoho.apiDomain}/oauth/v2/token`,
-        null,
+        tokenUrl,
+        new URLSearchParams({
+          refresh_token: config.zoho.refreshToken,
+          client_id: config.zoho.clientId,
+          client_secret: config.zoho.clientSecret,
+          grant_type: 'refresh_token',
+        }),
         {
-          params: {
-            refresh_token: config.zoho.refreshToken,
-            client_id: config.zoho.clientId,
-            client_secret: config.zoho.clientSecret,
-            grant_type: 'refresh_token',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
           },
         }
       );
