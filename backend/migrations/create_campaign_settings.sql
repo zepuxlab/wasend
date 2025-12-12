@@ -10,8 +10,6 @@ VALUES (
     "defaultDelaySeconds": 60,
     "defaultHourlyCap": 1000,
     "defaultDailyCap": 10000,
-    "utmSource": "whatsapp",
-    "utmMedium": "broadcast",
     "dailyLimitWarning": true,
     "dailyLimitAmount": 100,
     "pauseOnLimit": false

@@ -543,8 +543,6 @@ export interface CampaignSettings {
   defaultDelaySeconds: number;
   defaultHourlyCap: number;
   defaultDailyCap: number;
-  utmSource: string;
-  utmMedium: string;
   dailyLimitWarning: boolean;
   dailyLimitAmount: number;
   pauseOnLimit: boolean;

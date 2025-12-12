@@ -33,8 +33,6 @@ export default function Settings() {
     defaultDelaySeconds: 60,
     defaultHourlyCap: 1000,
     defaultDailyCap: 10000,
-    utmSource: "whatsapp",
-    utmMedium: "broadcast",
     dailyLimitWarning: true,
     dailyLimitAmount: 100,
     pauseOnLimit: false,
@@ -87,8 +85,6 @@ export default function Settings() {
           defaultDelaySeconds: data.campaign_settings.defaultDelaySeconds || 60,
           defaultHourlyCap: data.campaign_settings.defaultHourlyCap || 1000,
           defaultDailyCap: data.campaign_settings.defaultDailyCap || 10000,
-          utmSource: data.campaign_settings.utmSource || 'whatsapp',
-          utmMedium: data.campaign_settings.utmMedium || 'broadcast',
           dailyLimitWarning: data.campaign_settings.dailyLimitWarning !== undefined ? data.campaign_settings.dailyLimitWarning : true,
           dailyLimitAmount: data.campaign_settings.dailyLimitAmount || 100,
           pauseOnLimit: data.campaign_settings.pauseOnLimit !== undefined ? data.campaign_settings.pauseOnLimit : false,
@@ -328,45 +324,6 @@ export default function Settings() {
           </TabsContent>
 
           <TabsContent value="campaigns" className="space-y-6">
-            {/* UTM Settings */}
-            <Card className="p-6">
-              <h3 className="text-base font-semibold text-foreground mb-4">
-                Default UTM Parameters
-              </h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Applied to all links in campaigns
-              </p>
-
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="utm-source">UTM Source</Label>
-                  <Input
-                    id="utm-source"
-                    value={campaignSettings.utmSource}
-                    onChange={(e) =>
-                      setCampaignSettings({
-                        ...campaignSettings,
-                        utmSource: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="utm-medium">UTM Medium</Label>
-                  <Input
-                    id="utm-medium"
-                    value={campaignSettings.utmMedium}
-                    onChange={(e) =>
-                      setCampaignSettings({
-                        ...campaignSettings,
-                        utmMedium: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-              </div>
-            </Card>
-
             {/* Rate Limits */}
             <Card className="p-6">
               <h3 className="text-base font-semibold text-foreground mb-4">
