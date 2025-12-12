@@ -191,5 +191,55 @@ async function handleMessageStatus(status: MetaWebhookStatus) {
   }
 }
 
+// POST /api/webhook/test-incoming - Тестовый endpoint для имитации входящего сообщения
+router.post(
+  '/test-incoming',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { phone, message, name } = req.body;
+
+      if (!phone || !message) {
+        return res.status(400).json({
+          error: true,
+          message: 'Phone and message are required',
+          code: 'VALIDATION_ERROR',
+        });
+      }
+
+      // Создаем тестовое сообщение в формате Meta Webhook
+      const testMessage: MetaWebhookMessage = {
+        from: phone,
+        id: `test_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        timestamp: Math.floor(Date.now() / 1000).toString(),
+        type: 'text',
+        text: {
+          body: message,
+        },
+      };
+
+      // Обрабатываем как входящее сообщение
+      await handleIncomingMessage(testMessage);
+
+      // Если указано имя, обновляем контакт
+      if (name) {
+        const contact = await db.contacts.findByPhone(phone);
+        if (contact) {
+          await db.contacts.update(contact.id, { name });
+        }
+      }
+
+      res.json({
+        success: true,
+        message: 'Test incoming message created and synced with Zoho',
+        phone,
+        message,
+      });
+    } catch (error: any) {
+      console.error('Error creating test incoming message:', error);
+      return next(error);
+    }
+  }
+);
+
 export default router;
 
