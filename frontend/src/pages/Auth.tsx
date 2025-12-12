@@ -149,14 +149,12 @@ export default function Auth() {
       <Card className="w-full max-w-md p-6">
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg" style={{ backgroundColor: '#257662' }}>
-              <img 
-                src="https://office.ampriomilano.com/b2b/images/AM_logo_mini.svg" 
-                alt="AMSendler Logo" 
-                className="h-10 w-10"
-                style={{ filter: 'brightness(0) invert(1)' }}
-              />
-            </div>
+            <img 
+              src="https://office.ampriomilano.com/b2b/images/AM_logo_mini.svg" 
+              alt="AMSendler Logo" 
+              className="h-[38px] w-[38px]"
+              style={{ filter: 'brightness(0) saturate(100%) invert(30%) sepia(68%) saturate(1234%) hue-rotate(113deg) brightness(95%) contrast(85%)' }}
+            />
             <h1 className="text-2xl font-bold">WhatsApp Sendler</h1>
           </div>
           <p className="text-muted-foreground">Broadcast Management Panel</p>
