@@ -68,6 +68,12 @@ export default function Contacts() {
     tags: "",
     opt_in: true,
   });
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
+  const [selectedContactForHistory, setSelectedContactForHistory] = useState<{
+    id: string;
+    name: string | null;
+    phone: string;
+  } | null>(null);
 
   const filteredContacts = contacts?.filter(
     (c: any) =>
