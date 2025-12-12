@@ -150,13 +150,17 @@ router.post('/', async (req: Request, res: Response, next: NextFunction) => {
     }
 
     // Создать кампанию
+    // Преобразуем rate_limit объект в отдельные поля для базы данных
     const campaign = await db.campaigns.create({
       name: body.name,
       description: body.description,
       template_id: body.template_id,
       status: 'draft',
       variable_mapping: body.variable_mapping,
-      rate_limit: body.rate_limit,
+      rate_limit_per_batch: body.rate_limit.batch,
+      rate_limit_delay_seconds: body.rate_limit.delay_minutes * 60, // Конвертируем минуты в секунды
+      hourly_cap: body.rate_limit.hourly_cap || null,
+      daily_cap: body.rate_limit.daily_cap || null,
       total_recipients: contacts.length,
       sent_count: 0,
       delivered_count: 0,
@@ -215,7 +219,17 @@ router.patch(
         });
       }
 
-      const updated = await db.campaigns.update(id, req.body);
+      // Преобразуем rate_limit объект в отдельные поля, если он есть
+      const updates: any = { ...req.body };
+      if (updates.rate_limit) {
+        updates.rate_limit_per_batch = updates.rate_limit.batch;
+        updates.rate_limit_delay_seconds = updates.rate_limit.delay_minutes * 60;
+        updates.hourly_cap = updates.rate_limit.hourly_cap || null;
+        updates.daily_cap = updates.rate_limit.daily_cap || null;
+        delete updates.rate_limit;
+      }
+
+      const updated = await db.campaigns.update(id, updates);
       res.json(updated);
     } catch (error: any) {
       return next(error);

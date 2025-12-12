@@ -47,7 +47,18 @@ export const db = {
         .select('*, template:templates(*)')
         .order('created_at', { ascending: false });
       if (error) throw error;
-      return data;
+      // Преобразуем отдельные поля rate_limit в объект для совместимости с API
+      return data?.map((campaign: any) => {
+        if (campaign.rate_limit_per_batch !== undefined) {
+          campaign.rate_limit = {
+            batch: campaign.rate_limit_per_batch,
+            delay_minutes: Math.floor((campaign.rate_limit_delay_seconds || 0) / 60),
+            hourly_cap: campaign.hourly_cap,
+            daily_cap: campaign.daily_cap,
+          };
+        }
+        return campaign;
+      }) || [];
     },
     findById: async (id: string) => {
       const { data, error } = await supabase
@@ -56,6 +67,15 @@ export const db = {
         .eq('id', id)
         .single();
       if (error) throw error;
+      // Преобразуем отдельные поля rate_limit в объект для совместимости с API
+      if (data && data.rate_limit_per_batch !== undefined) {
+        data.rate_limit = {
+          batch: data.rate_limit_per_batch,
+          delay_minutes: Math.floor((data.rate_limit_delay_seconds || 0) / 60),
+          hourly_cap: data.hourly_cap,
+          daily_cap: data.daily_cap,
+        };
+      }
       return data;
     },
     create: async (campaign: any) => {
