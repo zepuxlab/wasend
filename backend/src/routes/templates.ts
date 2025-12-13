@@ -52,12 +52,20 @@ router.post('/sync', async (req: Request, res: Response, next: NextFunction) => 
       const bodyComponent = components.find((c: any) => c.type === 'BODY');
       const previewText = bodyComponent?.text || '';
 
+      // Преобразовать статус из Meta API (APPROVED/PENDING/REJECTED) в lowercase для базы данных
+      const statusMap: Record<string, 'approved' | 'pending' | 'rejected'> = {
+        'APPROVED': 'approved',
+        'PENDING': 'pending',
+        'REJECTED': 'rejected',
+      };
+      const normalizedStatus = statusMap[metaTemplate.status?.toUpperCase() || ''] || 'pending';
+
       const template = {
         whatsapp_template_id: metaTemplate.id,
         name: metaTemplate.name,
         category: metaTemplate.category,
         language: metaTemplate.language,
-        status: metaTemplate.status,
+        status: normalizedStatus,
         components: metaTemplate.components || [],
         variables: [...new Set(variables)], // уникальные переменные
         preview_text: previewText,
