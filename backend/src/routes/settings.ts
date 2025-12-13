@@ -172,5 +172,18 @@ router.patch('/', async (req: Request, res: Response, next: NextFunction) => {
   }
 });
 
+// GET /api/settings/meta-permissions - Проверить разрешения Meta API токена
+router.get(
+  '/meta-permissions',
+  async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const permissionCheck = await metaApi.testSendPermission();
+      res.json(permissionCheck);
+    } catch (error: any) {
+      return next(error);
+    }
+  }
+);
+
 export default router;
 

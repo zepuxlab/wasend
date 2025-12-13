@@ -169,7 +169,18 @@ class MetaApiService {
         message: errorMessage,
         phone: to,
         template: template,
+        fullError: error.response?.data,
       });
+
+      // Специальная обработка ошибки разрешений
+      if (errorCode === 200 || errorMessage?.includes('permissions')) {
+        console.error('⚠️ PERMISSION ERROR DETECTED');
+        console.error('Please check:');
+        console.error('1. Token has permissions: whatsapp_business_messaging, whatsapp_business_management');
+        console.error('2. App is connected to WhatsApp Business Account');
+        console.error('3. System User has access to WhatsApp Business Account');
+        console.error('4. Phone Number ID is correct and accessible');
+      }
       
       throw new Error(
         `Meta API Error: ${errorMessage}${errorCode ? ` (Code: ${errorCode})` : ''}`
@@ -289,6 +300,61 @@ class MetaApiService {
       throw new Error(
         `Meta API Error: ${error.response?.data?.error?.message || error.message}`
       );
+    }
+  }
+
+  /**
+   * Проверить разрешения токена и доступ к WhatsApp
+   */
+  async testSendPermission() {
+    const result: any = {
+      can_access_phone: false,
+      can_access_business_account: false,
+      phone_info: null,
+      business_account_info: null,
+      required_permissions: ['whatsapp_business_messaging', 'whatsapp_business_management'],
+      errors: [],
+      recommendations: [],
+    };
+
+    try {
+      // 1. Проверяем доступ к номеру телефона
+      try {
+        const phoneInfo = await this.getPhoneNumberInfo();
+        result.can_access_phone = true;
+        result.phone_info = phoneInfo;
+      } catch (error: any) {
+        result.errors.push(`Phone access: ${error.message}`);
+        result.recommendations.push('Проверьте, что Phone Number ID правильный и токен имеет доступ к нему');
+      }
+
+      // 2. Проверяем доступ к Business Account
+      try {
+        const businessInfo = await this.getBusinessAccountInfo();
+        result.can_access_business_account = true;
+        result.business_account_info = businessInfo;
+      } catch (error: any) {
+        result.errors.push(`Business Account access: ${error.message}`);
+        result.recommendations.push('Проверьте, что Business Account ID правильный и токен имеет доступ к нему');
+      }
+
+      // 3. Если есть ошибка доступа, добавляем рекомендации
+      if (!result.can_access_phone || !result.can_access_business_account) {
+        result.recommendations.push(
+          'Убедитесь, что токен создан через System User с разрешениями: whatsapp_business_messaging, whatsapp_business_management'
+        );
+        result.recommendations.push(
+          'Проверьте, что приложение связано с WhatsApp Business Account в Business Manager'
+        );
+        result.recommendations.push(
+          'Убедитесь, что System User имеет доступ к WhatsApp Business Account'
+        );
+      }
+
+      return result;
+    } catch (error: any) {
+      result.errors.push(`General error: ${error.message}`);
+      return result;
     }
   }
 }
