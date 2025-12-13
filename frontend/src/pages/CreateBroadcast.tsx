@@ -18,7 +18,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, ArrowRight, Check, Users, FileText, Send, Loader2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useApprovedTemplates } from "@/hooks/useTemplates";
-import { useContacts, useContactLists } from "@/hooks/useContacts";
+import { useContacts } from "@/hooks/useContacts";
+import { useContactListsFromBackend } from "@/hooks/useBackendContacts";
 import { useCreateCampaignBackend } from "@/hooks/useBackendCampaigns";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
@@ -45,7 +46,7 @@ export default function CreateBroadcast() {
     return null;
   }
   const { data: contacts, refetch: refetchContacts } = useContacts();
-  const { data: contactLists } = useContactLists();
+  const { data: contactLists } = useContactListsFromBackend();
   const createCampaign = useCreateCampaignBackend();
 
   const [currentStep, setCurrentStep] = useState(1);
