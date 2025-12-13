@@ -235,23 +235,63 @@ export default function Templates() {
                   <StatusBadge status={mapStatus(previewTemplate.status)} />
                 </div>
                 
+                {/* Информация о компонентах */}
+                {previewTemplate.components && (
+                  <div className="flex flex-wrap gap-2 text-xs">
+                    {previewTemplate.components.some((c: any) => c.type === 'HEADER' && ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(c.format)) && (
+                      <span className="rounded bg-blue-100 px-2 py-1 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                        🖼️ {previewTemplate.components.find((c: any) => c.type === 'HEADER')?.format || 'Media'}
+                      </span>
+                    )}
+                    {previewTemplate.components.some((c: any) => c.type === 'BUTTONS') && (
+                      <span className="rounded bg-green-100 px-2 py-1 text-green-700 dark:bg-green-900 dark:text-green-300">
+                        🔘 Buttons ({previewTemplate.components.find((c: any) => c.type === 'BUTTONS')?.buttons?.length || 0})
+                      </span>
+                    )}
+                    {previewTemplate.components.some((c: any) => c.type === 'BODY') && (
+                      <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                        📝 Body Text
+                      </span>
+                    )}
+                  </div>
+                )}
+                
                 <div className="rounded-lg bg-muted/30 p-4">
                   <div className="bubble-outgoing max-w-[280px] p-3">
-                    <p className="text-sm text-foreground">
-                      {previewTemplate.preview_text || "Template content preview"}
+                    {/* Показать изображение placeholder если есть HEADER с IMAGE */}
+                    {previewTemplate.components?.some((c: any) => c.type === 'HEADER' && c.format === 'IMAGE') && (
+                      <div className="mb-2 rounded bg-muted p-2 text-center text-xs text-muted-foreground">
+                        🖼️ Image
+                      </div>
+                    )}
+                    <p className="text-sm text-foreground whitespace-pre-line">
+                      {previewTemplate.preview_text || previewTemplate.components?.find((c: any) => c.type === 'BODY')?.text || "Template content preview"}
                     </p>
+                    {/* Показать кнопки если есть */}
+                    {previewTemplate.components?.find((c: any) => c.type === 'BUTTONS')?.buttons?.map((button: any, idx: number) => (
+                      <div key={idx} className="mt-2 rounded bg-primary/10 px-2 py-1 text-xs text-primary">
+                        {button.type === 'URL' && '🔗'} {button.type === 'QUICK_REPLY' && '💬'} {button.type === 'PHONE_NUMBER' && '📞'}
+                        {button.text || button.url || 'Button'}
+                      </div>
+                    ))}
                     <p className="mt-1 text-right text-[10px] text-muted-foreground">
                       12:34 PM ✓✓
                     </p>
                   </div>
                 </div>
 
-                <div className="text-xs text-muted-foreground">
+                <div className="text-xs text-muted-foreground space-y-1">
                   <p>
                     Variables:{" "}
                     <span className="font-mono text-foreground">
                       {previewTemplate.variables?.join(", ") || "None"}
                     </span>
+                  </p>
+                  <p>
+                    Category: <span className="text-foreground">{previewTemplate.category}</span>
+                  </p>
+                  <p>
+                    Language: <span className="text-foreground uppercase">{previewTemplate.language}</span>
                   </p>
                 </div>
               </div>

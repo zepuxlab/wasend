@@ -48,9 +48,29 @@ router.post('/sync', async (req: Request, res: Response, next: NextFunction) => 
         }
       }
 
-      // Создать preview_text
+      // Создать preview_text с информацией о компонентах
       const bodyComponent = components.find((c: any) => c.type === 'BODY');
-      const previewText = bodyComponent?.text || '';
+      const headerComponent = components.find((c: any) => c.type === 'HEADER');
+      const buttonsComponent = components.find((c: any) => c.type === 'BUTTONS');
+      
+      let previewText = bodyComponent?.text || '';
+      
+      // Добавить информацию о наличии изображения в HEADER
+      if (headerComponent?.format && ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(headerComponent.format)) {
+        const mediaType = headerComponent.format.toLowerCase();
+        previewText = `[${mediaType}] ${previewText}`.trim();
+      }
+      
+      // Добавить информацию о кнопках
+      if (buttonsComponent?.buttons && buttonsComponent.buttons.length > 0) {
+        const buttonTypes = buttonsComponent.buttons.map((b: any) => {
+          if (b.type === 'URL') return '🔗 Link';
+          if (b.type === 'QUICK_REPLY') return '💬 Quick Reply';
+          if (b.type === 'PHONE_NUMBER') return '📞 Call';
+          return '🔘 Button';
+        });
+        previewText = `${previewText}\n\n${buttonTypes.join(' • ')}`;
+      }
 
       // Преобразовать статус из Meta API (APPROVED/PENDING/REJECTED) в lowercase для базы данных
       const statusMap: Record<string, 'approved' | 'pending' | 'rejected'> = {
