@@ -80,10 +80,21 @@ router.post('/sync', async (req: Request, res: Response, next: NextFunction) => 
       };
       const normalizedStatus = statusMap[metaTemplate.status?.toUpperCase() || ''] || 'pending';
 
+      // Преобразовать категорию из Meta API в верхний регистр для базы данных
+      const categoryMap: Record<string, 'MARKETING' | 'UTILITY' | 'AUTHENTICATION'> = {
+        'MARKETING': 'MARKETING',
+        'UTILITY': 'UTILITY',
+        'AUTHENTICATION': 'AUTHENTICATION',
+        'marketing': 'MARKETING',
+        'utility': 'UTILITY',
+        'authentication': 'AUTHENTICATION',
+      };
+      const normalizedCategory = categoryMap[metaTemplate.category?.toUpperCase() || ''] || 'MARKETING';
+
       const template = {
         whatsapp_template_id: metaTemplate.id,
         name: metaTemplate.name,
-        category: metaTemplate.category,
+        category: normalizedCategory,
         language: metaTemplate.language,
         status: normalizedStatus,
         components: metaTemplate.components || [],
