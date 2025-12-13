@@ -27,6 +27,7 @@ import { useTemplates, useSyncTemplates } from "@/hooks/useTemplates";
 import { useSupabase } from "@/hooks/useSupabase";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export default function Templates() {
   const navigate = useNavigate();
@@ -258,22 +259,60 @@ export default function Templates() {
                 
                 <div className="rounded-lg bg-muted/30 p-4">
                   <div className="bubble-outgoing max-w-[280px] p-3">
-                    {/* Показать изображение placeholder если есть HEADER с IMAGE */}
+                    {/* Показать изображение если есть HEADER с IMAGE */}
                     {previewTemplate.components?.some((c: any) => c.type === 'HEADER' && c.format === 'IMAGE') && (
-                      <div className="mb-2 rounded bg-muted p-2 text-center text-xs text-muted-foreground">
-                        🖼️ Image
+                      <div className="mb-2 rounded bg-muted overflow-hidden">
+                        {previewTemplate.components?.find((c: any) => c.type === 'HEADER' && c.format === 'IMAGE')?.example?.header_handle?.[0] ? (
+                          <img 
+                            src={previewTemplate.components.find((c: any) => c.type === 'HEADER' && c.format === 'IMAGE').example.header_handle[0]} 
+                            alt="Template header" 
+                            className="w-full h-auto max-h-48 object-cover"
+                            onError={(e) => {
+                              // Если изображение не загрузилось, показываем placeholder
+                              (e.target as HTMLImageElement).style.display = 'none';
+                              const placeholder = (e.target as HTMLImageElement).nextElementSibling as HTMLElement;
+                              if (placeholder) placeholder.style.display = 'block';
+                            }}
+                          />
+                        ) : null}
+                        <div className="p-4 text-center text-xs text-muted-foreground bg-muted" style={{ display: previewTemplate.components?.find((c: any) => c.type === 'HEADER' && c.format === 'IMAGE')?.example?.header_handle?.[0] ? 'none' : 'block' }}>
+                          🖼️ Image Preview
+                        </div>
                       </div>
                     )}
                     <p className="text-sm text-foreground whitespace-pre-line">
                       {previewTemplate.preview_text || previewTemplate.components?.find((c: any) => c.type === 'BODY')?.text || "Template content preview"}
                     </p>
-                    {/* Показать кнопки если есть */}
-                    {previewTemplate.components?.find((c: any) => c.type === 'BUTTONS')?.buttons?.map((button: any, idx: number) => (
-                      <div key={idx} className="mt-2 rounded bg-primary/10 px-2 py-1 text-xs text-primary">
-                        {button.type === 'URL' && '🔗'} {button.type === 'QUICK_REPLY' && '💬'} {button.type === 'PHONE_NUMBER' && '📞'}
-                        {button.text || button.url || 'Button'}
-                      </div>
-                    ))}
+                    {/* Показать кнопки если есть - делаем их кликабельными */}
+                    {previewTemplate.components?.find((c: any) => c.type === 'BUTTONS')?.buttons?.map((button: any, idx: number) => {
+                      const buttonUrl = button.type === 'URL' ? button.url : null;
+                      const buttonText = button.text || button.url || 'Button';
+                      
+                      return (
+                        <a
+                          key={idx}
+                          href={buttonUrl || '#'}
+                          target={buttonUrl ? "_blank" : undefined}
+                          rel={buttonUrl ? "noopener noreferrer" : undefined}
+                          onClick={(e) => {
+                            if (!buttonUrl) {
+                              e.preventDefault();
+                              toast({
+                                title: button.type === 'QUICK_REPLY' ? 'Quick Reply' : button.type === 'PHONE_NUMBER' ? 'Phone Number' : 'Button',
+                                description: buttonText,
+                              });
+                            }
+                          }}
+                          className={cn(
+                            "mt-2 block rounded bg-primary/10 px-2 py-1 text-xs text-primary transition-colors",
+                            buttonUrl ? "hover:bg-primary/20 cursor-pointer" : "cursor-default"
+                          )}
+                        >
+                          {button.type === 'URL' && '🔗'} {button.type === 'QUICK_REPLY' && '💬'} {button.type === 'PHONE_NUMBER' && '📞'}
+                          {buttonText}
+                        </a>
+                      );
+                    })}
                     <p className="mt-1 text-right text-[10px] text-muted-foreground">
                       12:34 PM ✓✓
                     </p>

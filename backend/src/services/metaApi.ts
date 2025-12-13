@@ -417,41 +417,52 @@ export function buildTemplateComponents(
       }
     } else if (component.type === 'BUTTONS') {
       // Обработка BUTTONS компонента
-      const buttonComponents: any = {
-        type: 'button',
-        sub_type: 'url', // Assuming URL buttons for now
-        index: component.index, // Index of the button component
-        parameters: [],
-      };
-
-      // Check for dynamic URL parameters in buttons
+      // Meta API требует отдельный компонент для каждой кнопки с динамическими переменными
       if (component.buttons) {
-        for (const button of component.buttons) {
+        for (let buttonIndex = 0; buttonIndex < component.buttons.length; buttonIndex++) {
+          const button = component.buttons[buttonIndex];
+          
+          // Обрабатываем только кнопки с динамическими переменными
           if (button.type === 'URL' && button.url) {
             const urlMatches = button.url.match(/\{\{(\d+)\}\}/g) || [];
             if (urlMatches.length > 0) {
+              const buttonComponent: any = {
+                type: 'button',
+                sub_type: 'url',
+                index: buttonIndex, // Index кнопки (0, 1, 2...)
+                parameters: [],
+              };
+              
               const sortedUrlMatches = urlMatches.sort((a: string, b: string) => {
                 const numA = parseInt(a.match(/\d+/)?.[0] || '0');
                 const numB = parseInt(b.match(/\d+/)?.[0] || '0');
                 return numA - numB;
               });
+              
               for (const match of sortedUrlMatches) {
                 const varNum = match.match(/\d+/)?.[0];
                 if (varNum) {
                   const placeholder = `{{${varNum}}}`;
                   const value = variables[placeholder] || '';
-                  buttonComponents.parameters.push({
+                  buttonComponent.parameters.push({
                     type: 'text',
                     text: value || '',
                   });
                 }
               }
+              
+              if (buttonComponent.parameters.length > 0) {
+                components.push(buttonComponent);
+              }
             }
+          } else if (button.type === 'QUICK_REPLY' && button.text) {
+            // Quick Reply кнопки не поддерживают динамические переменные в Meta API
+            // Они всегда статические
+          } else if (button.type === 'PHONE_NUMBER' && button.phone_number) {
+            // Phone Number кнопки не поддерживают динамические переменные
+            // Они всегда статические
           }
         }
-      }
-      if (buttonComponents.parameters.length > 0) {
-        components.push(buttonComponents);
       }
     }
   }
