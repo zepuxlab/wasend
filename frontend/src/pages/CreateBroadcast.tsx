@@ -390,11 +390,52 @@ export default function CreateBroadcast() {
                           <p className="text-sm text-muted-foreground mt-1">
                             {template.category}
                           </p>
-                          {template.preview_text && (
-                            <p className="text-sm mt-2 p-2 bg-muted rounded">
-                              {template.preview_text}
-                            </p>
+                          
+                          {/* Информация о компонентах */}
+                          {template.components && (
+                            <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                              {template.components.some((c: any) => c.type === 'HEADER' && ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(c.format)) && (
+                                <span className="rounded bg-blue-100 px-2 py-1 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                  🖼️ {template.components.find((c: any) => c.type === 'HEADER')?.format || 'Media'}
+                                </span>
+                              )}
+                              {template.components.some((c: any) => c.type === 'BUTTONS') && (
+                                <span className="rounded bg-green-100 px-2 py-1 text-green-700 dark:bg-green-900 dark:text-green-300">
+                                  🔘 Buttons ({template.components.find((c: any) => c.type === 'BUTTONS')?.buttons?.length || 0})
+                                </span>
+                              )}
+                              {template.components.some((c: any) => c.type === 'BODY') && (
+                                <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                                  📝 Body Text
+                                </span>
+                              )}
+                            </div>
                           )}
+                          
+                          {/* Preview сообщения */}
+                          <div className="mt-3 rounded-lg bg-muted/30 p-3">
+                            <div className="bubble-outgoing max-w-[280px] p-2">
+                              {/* Показать изображение placeholder если есть HEADER с IMAGE */}
+                              {template.components?.some((c: any) => c.type === 'HEADER' && c.format === 'IMAGE') && (
+                                <div className="mb-2 rounded bg-muted p-2 text-center text-xs text-muted-foreground">
+                                  🖼️ Image
+                                </div>
+                              )}
+                              <p className="text-sm text-foreground whitespace-pre-line">
+                                {template.preview_text || template.components?.find((c: any) => c.type === 'BODY')?.text || "Template content"}
+                              </p>
+                              {/* Показать кнопки если есть */}
+                              {template.components?.find((c: any) => c.type === 'BUTTONS')?.buttons?.map((button: any, idx: number) => (
+                                <div key={idx} className="mt-2 rounded bg-primary/10 px-2 py-1 text-xs text-primary">
+                                  {button.type === 'URL' && '🔗'} {button.type === 'QUICK_REPLY' && '💬'} {button.type === 'PHONE_NUMBER' && '📞'}
+                                  {button.text || button.url || 'Button'}
+                                </div>
+                              ))}
+                              <p className="mt-1 text-right text-[10px] text-muted-foreground">
+                                12:34 PM ✓✓
+                              </p>
+                            </div>
+                          </div>
                         </div>
                         {formData.templateId === template.id && (
                           <Check className="h-5 w-5 text-primary" />
@@ -599,13 +640,52 @@ export default function CreateBroadcast() {
                 </div>
               </div>
 
-              {selectedTemplate?.preview_text && (
+              {selectedTemplate && (
                 <div className="space-y-2">
                   <Label>Message Preview</Label>
+                  
+                  {/* Информация о компонентах */}
+                  {selectedTemplate.components && (
+                    <div className="flex flex-wrap gap-2 mb-2 text-xs">
+                      {selectedTemplate.components.some((c: any) => c.type === 'HEADER' && ['IMAGE', 'VIDEO', 'DOCUMENT'].includes(c.format)) && (
+                        <span className="rounded bg-blue-100 px-2 py-1 text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                          🖼️ {selectedTemplate.components.find((c: any) => c.type === 'HEADER')?.format || 'Media'}
+                        </span>
+                      )}
+                      {selectedTemplate.components.some((c: any) => c.type === 'BUTTONS') && (
+                        <span className="rounded bg-green-100 px-2 py-1 text-green-700 dark:bg-green-900 dark:text-green-300">
+                          🔘 Buttons ({selectedTemplate.components.find((c: any) => c.type === 'BUTTONS')?.buttons?.length || 0})
+                        </span>
+                      )}
+                      {selectedTemplate.components.some((c: any) => c.type === 'BODY') && (
+                        <span className="rounded bg-gray-100 px-2 py-1 text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+                          📝 Body Text
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  
                   <div className="bg-muted/50 rounded-lg p-4">
                     <div className="bg-background rounded-lg p-3 shadow-sm max-w-sm">
-                      <p className="text-sm">{selectedTemplate.preview_text}</p>
-                      <p className="text-xs text-muted-foreground mt-2 text-right">12:34 ✓✓</p>
+                      <div className="bubble-outgoing">
+                        {/* Показать изображение placeholder если есть HEADER с IMAGE */}
+                        {selectedTemplate.components?.some((c: any) => c.type === 'HEADER' && c.format === 'IMAGE') && (
+                          <div className="mb-2 rounded bg-muted p-2 text-center text-xs text-muted-foreground">
+                            🖼️ Image
+                          </div>
+                        )}
+                        <p className="text-sm text-foreground whitespace-pre-line">
+                          {selectedTemplate.preview_text || selectedTemplate.components?.find((c: any) => c.type === 'BODY')?.text || "Template content"}
+                        </p>
+                        {/* Показать кнопки если есть */}
+                        {selectedTemplate.components?.find((c: any) => c.type === 'BUTTONS')?.buttons?.map((button: any, idx: number) => (
+                          <div key={idx} className="mt-2 rounded bg-primary/10 px-2 py-1 text-xs text-primary">
+                            {button.type === 'URL' && '🔗'} {button.type === 'QUICK_REPLY' && '💬'} {button.type === 'PHONE_NUMBER' && '📞'}
+                            {button.text || button.url || 'Button'}
+                          </div>
+                        ))}
+                        <p className="text-xs text-muted-foreground mt-2 text-right">12:34 ✓✓</p>
+                      </div>
                     </div>
                   </div>
                 </div>
